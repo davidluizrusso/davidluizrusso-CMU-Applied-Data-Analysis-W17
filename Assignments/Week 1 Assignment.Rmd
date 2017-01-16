@@ -5,26 +5,26 @@ date: "1/15/2017"
 output: word_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+* 2.4 #1
 
-## R Markdown
++ a. A flexible statistical model would perform           **better** than an inflexible statistical model when    *n* is extremely large and *p* is small. With a large   sample size and small number of predictors, we are less likely to overfit the data. Furthermore, flexible models will have lower bias than inflexible models which will contribute to a lower overall test error. 
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+  + b. A flexible statistical model would perform           **worse** than an inflexible statistical model when     *n* is small and *p* is extremely large. Using a flexible model with a small sample size would introduce a large amount of variance due to overfitting. 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+  + c. A flexible statistical model would perform           **better** than an inflexible statistical model when the relationship between the predictors and the response is highly non-linear. Flexibile statistical models are better equipped to handle non-linearities than inflexible statistical models. Inflexible statistical models will often only detect linear relationships between predictors and the response. 
 
-```{r cars}
-summary(cars)
-```
+  + d. A flexible statistical model would perform           **worse** than an inflexible statistical model when the variance of the error terms is high. If the variance of the error terms is high, a flexible model will be likely to overfit the data, resulting in higher variance and higher test error. 
 
-## Including Plots
+* 2.4 #2
 
-You can also embed plots, for example:
+  + a. Regression setting; inference; n = 500, p = profit, number of employees, industry
+  
+  + b. Classification setting; prediction; n = 20; p = price charged for the product, marketing budget, competition price
+  
+  + c. Regression setting; prediction; n = 52; p = % change in US market, % change in British market, % change in German market
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+* 2.4 #3
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+* 2.4 #4
+
+* 2.4 #8
