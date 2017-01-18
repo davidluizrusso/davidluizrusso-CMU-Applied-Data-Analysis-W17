@@ -135,19 +135,21 @@ head(college)
 summary(college)
 
 ```
-      +ii. pairs()
+      + ii. pairs()
 ```{r pairs_function, echo = TRUE, include = TRUE}
 
 pairs(college[, 1:10])
 
 ```
-      +iii. plot()
+     
+      + iii. plot()
 ```{r plot_function, echo = TRUE, include = TRUE}
 
 plot(college$Private, college$Outstate)
 
 ```
-      +iv. Create new variable
+      
+      + iv. Create new variable
 ```{r create_vars, echo = TRUE, include = TRUE}
 
 # create Elite indicator for colleges where more than 50% of the students are from the top 10% of their high schoo class
@@ -163,14 +165,21 @@ summary(college$Elite)
 plot(college$Elite, college$Outstate)
 
 ```
-      +v. hist()
+     
+      + v. hist()
 ```{r hist_function, echo = TRUE, include = TRUE}
 
-
+par(mfrow = c(2,2))
+hist(college$Apps, breaks = 10, main = "Apps \n Bins = 10")
+hist(college$Room.Board, breaks = 20, main = "Room and Board \n Bins = 20")
+hist(college$PhD, breaks = 50, main = "PhD \n Bins = 50")
+hist(college$Grad.Rate, breaks = 100, main = "Graduation Rate \n Bins = 100")
 
 ```
-      +vi. Further exploration
+     
+      + vi. Further exploration
 ```{r further_exploration, echo = TRUE, include = TRUE}
+
 
 
 ```
