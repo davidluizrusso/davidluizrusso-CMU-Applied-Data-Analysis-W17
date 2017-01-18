@@ -25,6 +25,81 @@ output: word_document
 
 * 2.4 #3
 
+```{r setup_sketch_data, echo = FALSE, include = FALSE}
+
+library(tidyverse)
+
+# x axis will go from 1 to 20
+x_axis <- seq(from = 1, to = 20, by = 1)
+
+# bias decreases as model complexity increases
+bias <- exp(-5*seq(from = 0.01, to = 1, by = 0.05))
+
+# variance increases as model complexity increases
+variance <- exp(-5*seq(from = 1, to = 0.01, by = -0.05))
+
+# training error decreases as model complexity increases
+training_error <- bias + runif(length(x_axis), 0.05, 0.055)
+
+# testing error decreases initially and eventually increases
+testing_error <- bias + variance + runif(length(x_axis), 0.05, 0.055)
+
+# bayes_error error is the irreducible error
+bayes_error <- rep(0.25, length(x_axis))
+
+bv <- data.frame(`x axis` = x_axis, 
+                 bias = bias,
+                 variance = variance,
+                 `training error` = training_error,
+                 `testing error` = testing_error,
+                 `bayes error` = bayes_error)
+
+bv_long <- tidyr::gather(bv, `error source`, value, -1)
+
+```
+  + a.
+```{r plot_bias_variance_trade_off, echo = FALSE}
+
+bias_var_plot <- 
+  
+  ggplot(bv_long, aes(x = x.axis, y = value)) + 
+  
+    geom_line(aes(col = `error source`)) +
+  
+      xlab("flexibility") + 
+  
+        ylab("")
+
+bias_var_plot
+
+```
+  + b.
+      + i. The bias decreases with model flexibility because models that are more flexible are able to better fit the training data. As the fit improves, the bias decreases. 
+      
+      + ii. The variance increases with model flexibility because more flexible models tend to overfit the training data. When the model is applied to new data that wasn't used to train the model, the model will have a high degree of variation. This is because the highly flexible model can only model the training data, and not new data. 
+      
+      + iii. The training error decreases with model flexibility because more flexible models are able to model the training data well. As flexibility increases, data overfitting increases which decreases bias because the model is able to predict the training data well. 
+      
+      + iv. The testing error has a U-shape because it demonstrates the bias-variance trade off. As model flexibility increases, bias decreases but variance increases. The minimum point of the U-shape represents the degree of flexibility that yields the best trade off between bias and variance in terms of predictive ability on new data. Models that are not flexible enough will have high bias but low variance when tested on new data. Models that are too flexible will overfit the data and have low bias but high variance when tested on new data. 
+      
+      + v. The Bayes error is a horizontal line because it is constant. It represents the true noise in the data that cannot be captured by the model. 
+  
+  
 * 2.4 #4
+
+  + a. Classification
+      + i. One example of a classification problem is predicting whether or not a customer will default on their mortgage based on their personal and financial data. The response is binary: 0 if they did not default and 1 if they did. The predictors are salary in dollars, down payment in dollars, age in years, gender, and savings account balance in dollars. The goal of this problem is prediction because the bank wants to make wise investment decisions and not give a mortgage to a risky customer. 
+      + ii.
+      + iii.
+      
+  + b. Regression
+      + i.
+      + ii.
+      + iii.
+      
+  + c. Cluster Analysis
+      + i.
+      + ii.
+      + iii.
 
 * 2.4 #8
