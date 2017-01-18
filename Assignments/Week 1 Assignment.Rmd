@@ -118,7 +118,59 @@ college <- read.csv(paste(workDir, "College.csv", sep = "/"), header = TRUE)
   + b. Explore the data 
 ```{r 2.8_b, echo = TRUE, include = TRUE}
 
-rownames(college) = college[, 1]
+# assign row names to the dataset college
+rownames(college) <- college[, 1]
+head(college)
+
+# remove the column containing the college names
+college <- college[, -1]
+head(college)
+
+```
+
+  + c. Perforom exploratory data analysis on *college* data set
+      + i. summary()
+```{r summary_function, echo = TRUE, include = TRUE}
+
+summary(college)
+
+```
+      +ii. pairs()
+```{r pairs_function, echo = TRUE, include = TRUE}
+
+pairs(college[, 1:10])
+
+```
+      +iii. plot()
+```{r plot_function, echo = TRUE, include = TRUE}
+
+plot(college$Private, college$Outstate)
+
+```
+      +iv. Create new variable
+```{r create_vars, echo = TRUE, include = TRUE}
+
+# create Elite indicator for colleges where more than 50% of the students are from the top 10% of their high schoo class
+Elite <- rep("No", nrow(college))
+Elite[college$Top10perc > 50] <- "Yes"
+Elite <- as.factor(Elite)
+college <- data.frame(college, Elite)
+
+# determine counts for elite colleges
+summary(college$Elite)
+
+# produce boxplots for Elite and Outstate
+plot(college$Elite, college$Outstate)
+
+```
+      +v. hist()
+```{r hist_function, echo = TRUE, include = TRUE}
+
+
+
+```
+      +vi. Further exploration
+```{r further_exploration, echo = TRUE, include = TRUE}
 
 
 ```
