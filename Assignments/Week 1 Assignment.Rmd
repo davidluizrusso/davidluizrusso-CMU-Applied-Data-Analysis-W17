@@ -57,7 +57,7 @@ bv <- data.frame(`x axis` = x_axis,
 bv_long <- tidyr::gather(bv, `error source`, value, -1)
 
 ```
-  + a.
+  + a. 
 ```{r plot_bias_variance_trade_off, echo = FALSE}
 
 bias_var_plot <- 
@@ -73,7 +73,7 @@ bias_var_plot <-
 bias_var_plot
 
 ```
-  + b.
+
       + i. The bias decreases with model flexibility because models that are more flexible are able to better fit the training data. As the fit improves, the bias decreases. 
       
       + ii. The variance increases with model flexibility because more flexible models tend to overfit the training data. When the model is applied to new data that wasn't used to train the model, the model will have a high degree of variation. This is because the highly flexible model can only model the training data, and not new data. 
@@ -88,18 +88,37 @@ bias_var_plot
 * 2.4 #4
 
   + a. Classification
-      + i. One example of a classification problem is predicting whether or not a customer will default on their mortgage based on their personal and financial data. The response is binary: 0 if they did not default and 1 if they did. The predictors are salary in dollars, down payment in dollars, age in years, gender, and savings account balance in dollars. The goal of this problem is prediction because the bank wants to make wise investment decisions and not give a mortgage to a risky customer. 
-      + ii.
-      + iii.
+      + i. One example of a classification problem is predicting whether or not a customer will default on their mortgage based on their personal and financial data. The response is binary: 0 if they did not default and 1 if they did. The predictors are salary in dollars, down payment in dollars, age in years, gender, and savings account balance in dollars. The goal of this problem is prediction because the bank wants to make wise investment decisions and not give a mortgage to a risky customer. The bank doesn't necessarily care what causes a customer to default on their mortgage, but rather to be able to accurately predict if a customer will default on their mortgage.
+      + ii. Another example of a classification problem is determining which health related attributes contribute to a patient's lung cancer status. The response is binary: 0 if they do not have lung cancer and 1 if they do have lung cancer. The predictors are age in years, gender, healthy eating status, exercise level, smoker status, and alcohol usage status. The goal of this problem is inference because a doctor will want to identify traits and habits that could lead to having lung cancer. It won't be useful to predict whether or not a given patient has cancer based on their attributes, but rather to instruct them to adopt different a different lifestyle to reduce their risk for cancer. 
+      + iii. A final example of a classification problem is determining whether or not an airplane part will fail within the first three months of usage. The response is binary: 0 if the part will not fail and 1 if the part will fail. The predictors are plant where the part was manufactured and the amount of time it has been sitting on the shelf. The goal of this problem is prediction because the airplane operator will not be concerned with why the part is failing but rather whether or not it will fail. 
       
   + b. Regression
-      + i.
-      + ii.
-      + iii.
+      + i. One example of a regression problem is predicting the amount of money that a customer will spend at a store based on their attributes. The response is dollars spent and the predictors are the gender of the customer, the occupation of the customer, the age of the customer, and the number of times that the customer goes shopping per month. The goal of the problem is inference so that the store can better understand how to market to their target audience. 
+      + ii. Another example of a regression problem is predicting how many pounds a patient will lose while participating in a diet and exercise regiment being offered by a fitness club. If the customer doesn't lose their target amount of weight, they will receive a portion of their money back. The response is weight loss in pounds and the predictors are height, current weight, gender, and daily activity level. The goal of the problem is prediction because the fitness club does not want to put risky customers on their diet and exercise regiment. Their model must accurately predict weight loss or else they will lose money. 
+      + iii. A final example of regression is predicting the amount of money for which a house will sell. The response is sale price in dollars and the predictors are square feet of the house, number of bathrooms, number of bedrooms, and distance from the nearest school. The goal of this problem is prediction because the seller wants to have accurate estimates of how much their house will sell for. They will not necessarily care what features contribute to a higher selling price. 
       
   + c. Cluster Analysis
-      + i.
-      + ii.
-      + iii.
+      + i. One example of a cluster analysis is an animal adoption agency wants to classify their animals into 4 categories based on their attributes: good for a family with young kids, good for a family without young kids, good for young individuals/couples with no kids, and good for older individuals/couples with no kids. The animals could then be marketed in such a way that they would be more likely to be adopted by a fitting owner. This is a clustering problem because there aren't existing category labels for the animals on which to train a model.
+      + ii. Another example of a cluster analysis is a marketing company is trying to segment their audience into distinct groups to provide targeted advertising. This is a clustering problem because there aren't pre-existing labels for their target audience and they must instead be determined based on the attributes of their audience.
+      + iii. A final example of a cluster analysis is determining which category a given investor falls into: risk averse, risk neutral, and willing to take investment risks. With this information, the bank could offer targeted services to a given individual based on their attributes. This is a clustering problem because there are no pre-existing labels and hence no training data on which to train a model. 
 
 * 2.4 #8
+
+  + a. Set working directory and load data
+```{r 2.8_a, echo = TRUE, include = TRUE}
+
+
+
+workDir <- "/Users/davidrusso/Documents/Classes/Applied Data Analysis/Assignments"
+
+college <- read.csv(paste(workDir, "College.csv", sep = "/"), header = TRUE)
+
+```
+
+  + b. Explore the data 
+```{r 2.8_b, echo = TRUE, include = TRUE}
+
+rownames(college) = college[, 1]
+
+
+```
