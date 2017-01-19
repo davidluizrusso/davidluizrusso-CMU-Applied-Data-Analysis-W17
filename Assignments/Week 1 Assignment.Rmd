@@ -120,11 +120,11 @@ college <- read.csv(paste(workDir, "College.csv", sep = "/"), header = TRUE)
 
 # assign row names to the dataset college
 rownames(college) <- college[, 1]
-head(college)
+college[1:6, 1:6]
 
 # remove the column containing the college names
 college <- college[, -1]
-head(college)
+college[1:6, 1:6]
 
 ```
 
@@ -145,7 +145,7 @@ pairs(college[, 1:10])
       + iii. plot()
 ```{r plot_function, echo = TRUE, include = TRUE}
 
-plot(college$Private, college$Outstate)
+plot(college$Private, college$Outstate, xlab = "Private School Indicator", ylab = "Out of State")
 
 ```
       
@@ -170,9 +170,9 @@ plot(college$Elite, college$Outstate)
 ```{r hist_function, echo = TRUE, include = TRUE}
 
 par(mfrow = c(2,2))
-hist(college$Apps, breaks = 10, main = "Apps \n Bins = 10")
-hist(college$Room.Board, breaks = 20, main = "Room and Board \n Bins = 20")
-hist(college$PhD, breaks = 50, main = "PhD \n Bins = 50")
+hist(college$Apps, breaks = 10, main = "Applications Received \n Bins = 10")
+hist(college$Room.Board, breaks = 20, main = "Room and Board costs \n Bins = 20")
+hist(college$PhD, breaks = 50, main = "Percentage of Faculty with PhDs \n Bins = 50")
 hist(college$Grad.Rate, breaks = 100, main = "Graduation Rate \n Bins = 100")
 
 ```
@@ -180,6 +180,20 @@ hist(college$Grad.Rate, breaks = 100, main = "Graduation Rate \n Bins = 100")
       + vi. Further exploration
 ```{r further_exploration, echo = TRUE, include = TRUE}
 
+plot(college$Top10perc,
+     college$Accept/college$Apps,
+     xlab = "Pct. new students from top 10% of H.S. class Top25perc",
+     ylab = "Acceptance Rate")
 
+plot(college$Private,
+     college$Accept/college$Apps,
+     xlab = "Private School Indicator",
+     ylab = "Acceptance Rate")
+
+plot(college$Grad.Rate,
+     college$Accept/college$Apps,
+     xlab = "Graduation Rate",
+     ylab = "Acceptance Rate")
 
 ```
+As the number of students from the top 10% of their high school class increases, the acceptance rate decreases. This would indicate that colleges that receive more competitive applications are able to be more selective. The median acceptance rate is slightly higher for private schools but they have many more outlier examples of lower acceptance rates. Graduation rate is generally higher for schools with lower acceptance rates. In general, it appears that stronger students tend to go to more selective schools and that selective schools tend to have higher graduation rates. The most selective schools tend to be private.  
