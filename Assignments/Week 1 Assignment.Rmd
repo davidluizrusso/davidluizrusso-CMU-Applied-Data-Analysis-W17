@@ -196,4 +196,6 @@ plot(college$Grad.Rate,
      ylab = "Acceptance Rate")
 
 ```
+
+
 As the number of students from the top 10% of their high school class increases, the acceptance rate decreases. This would indicate that colleges that receive more competitive applications are able to be more selective. The median acceptance rate is slightly higher for private schools but they have many more outlier examples of lower acceptance rates. Graduation rate is generally higher for schools with lower acceptance rates. In general, it appears that stronger students tend to go to more selective schools and that selective schools tend to have higher graduation rates. The most selective schools tend to be private.  
