@@ -117,4 +117,40 @@ plot(lm_all)
 ```
 
      + The residual plot indicates that a linear regression may not be the most appropriate choice in model as the relationship between the predictors and mpg may not be linear. Furthermore, there is evidence that the assumption of constant variance is violated. As the fitted values get larger, so do the residuals. 
+    
+    + e. interactions
+```{r}
 
+lm_int1 <- lm(mpg ~ displacement + weight + year + origin + year*displacement, data = auto)
+summary(lm_int1)
+
+lm_int2 <- lm(mpg ~ displacement + weight + year + origin + year*weight, data = auto)
+summary(lm_int2)
+
+lm_int3 <- lm(mpg ~ displacement + weight + year + origin + year*origin, data = auto)
+summary(lm_int3)
+
+```
+       + Each of the interactions considered were significant, as evidenced by each of their p-values being significantly smaller than 0.05. 
+       
+    + f. Transformations
+```{r}
+
+lm_log_disp <- lm(mpg ~ log(displacement) + weight + year + origin, data = auto)
+summary(lm_log_disp)
+par(mfrow = c(2,2))
+plot(lm_log_disp)
+
+lm_sqrt_disp <- lm(mpg ~ sqrt(displacement) + weight + year + origin, data = auto)
+summary(lm_sqrt_disp)
+par(mfrow = c(2,2))
+plot(lm_sqrt_disp)
+
+
+lm_sqrd_disp <- lm(mpg ~ displacement + I(displacement^2) + weight + year + origin, data = auto)
+summary(lm_sqrd_disp)
+par(mfrow = c(2,2))
+plot(lm_sqrd_disp)
+
+```
+Applying the three transformations to dispalcement does not appear to have much of an effect on model fit. In each case, the residual plot does not show much evidence of improved fit. Furthermore, each plot illustrates that the assumption of constant variance is violated as the residuals increase with the fitted values. Lastly, the assumption of normality is violated with each model, as evidenced by the qq-plots. The log and square of displacement are significant, while the square root of displacement is not significant. This indicates that either a polynomial fit with displacement or using the log of displacement in other models may yield a better fit. 
