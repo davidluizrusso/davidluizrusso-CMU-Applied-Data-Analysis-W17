@@ -2,7 +2,9 @@
 title: "Week 2 Assignment"
 author: "David Russo"
 date: "1/25/2017"
-output: word_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 * 3.7 #1
@@ -14,8 +16,105 @@ output: word_document
     
 * 3.7 #2 KNN regression and KNN Classification differ only in the form of their predicted response. KNN Classification predicts a qualitative response, while KNN regression predicts a quantitative response. In KNN classification, the predicted classification for a given test observation is the majority vote of the K nearest classifications. In KNN regression, the predicted value for a given test observation is the mean value of the K nearest responses. 
 
-* 3.7 #3
-    + a. f
-    + b. g
-    + c. h
-    + d. i
+* 3.7 #3 
+    + $\hat{Salary} = 50+20*GPA+0.07*IQ+35*Fem+0.01*GPA*IQ-10*GPA*Fem$
+    + $\hat{SalaryFemale} = 50+20*GPA+0.07*IQ+35+0.01*GPA*IQ-10*GPA$
+    + $\hat{SalaryMale} = 50+20*GPA+0.07*IQ+0.01*GPA*IQ$
+    + a. iii is correct. This is correct because there is an interaction between gender and GPA. For low values of GPA, the +35 for females overpowers the -10*GPA. As GPA increases, the -10*GPA overpowers the +35. 
+    + b. $\hat{Salary} = 50+20*4.0+0.07*110+35*1+0.01*4.0*110-10*4.0*1 = \$137,000$
+    + c. False. The size of a coefficient is not indicative of its significance. The significance of a coefficient depends on the size of its standard error relative to the size of the effect. In fact, with a large sample size, very small effects can be statistically significant. 
+    
+* 3.7 #8
+
+
+```{r 3.7_8, echo = TRUE, include = TRUE}
+
+workDir <- "/Users/davidrusso/Documents/Classes/Applied Data Analysis/Assignments"
+
+auto <- read.csv(paste(workDir, "Auto.csv", sep = "/"), header = TRUE, stringsAsFactors = FALSE)
+
+auto$horsepower <- as.numeric(auto$horsepower)
+
+```
+
+    + a. lm() and summary()
+
+```{r}
+lm_hp <- lm(mpg ~ as.numeric(horsepower), data = auto)
+
+summary(lm_hp)
+
+```
+      + i. There is a relationship between the predictor and the response, as evidenced by the small p-value of <2e-16.
+      + ii. The relationship between the predictor and the response is moderate, as evidenced by the R^2 of 0.6059. This indicates that 60.59% of the variation in mpg is explained by the variation in horsepower. 
+      + iii. The relationship between mpg and horsepower is negative, as evidenced by the negative coefficient for horsepower. 
+      + iv. 
+      
+```{r}
+
+new_data <- data.frame(horsepower = 98)
+pred_val <- predict(lm_hp, newdata = new_data)
+pred_val_ci <- predict(lm_hp, newdata = new_data, interval = "confidence")
+pred_val_pi <- predict(lm_hp, newdata = new_data, interval = "prediction")
+
+```
+        + 1. The predicted mpg at a horsepower of 98 is 24.48 mpg
+        + 2. The confidence interval for this prediction is [23.97, 24.96]
+        + 3. The prediction interval for this prediction is [14.81, 34.12]
+        
+    + b.  plot()
+    
+```{r}
+
+plot(auto$horsepower, auto$mpg)
+abline(lm_hp$coefficients[1], lm_hp$coefficients[2])
+
+```
+
+    + c. plot() for diagnostics
+```{r}
+
+par(mfrow = c(2,2))
+plot(lm_hp)
+
+```
+    + The residual plot indicates that the variance is non-constant. As the fitted values get larger, the residuals get larger. This is a violation of the assumption of constant variance. This also provides evidence that the relationship between horsepower and mpg is non-linear. The qq-plot indicates some lack of normality at the tails of the distribution. 
+    
+* 3.7 #9
+
+    + a. pairs()
+```{r}
+
+pairs(auto[, !names(auto) %in% "name"])
+
+```
+
+    + b. cor()
+```{r}
+
+cor(auto[!is.na(auto$horsepower), !names(auto) %in% "name"])
+
+```
+
+    + c. lm()
+```{r}
+
+lm_all <- lm(mpg ~ ., data = auto[, !names(auto) %in% "name"])
+summary(lm_all)
+
+```
+
+      + i. There is an overall relationship between the predictors and mpg, as evidenced by the p-value for the F-test in the summary. The p-value of <2.2e-16 indicates that at least one of the coefficients is different from zero.
+      + ii. The following predictors appear to be related to mpg: displacement, weight, year, and origin. Each of these p-values is less than 0.05. 
+      + iii. The year coefficient of 0.75 indicates that for each additional year (i.e., the newer the car is), mileage increases by 0.75 miles per gallon. 
+
+    + d. plot()
+```{r}
+
+par(mfrow = c(2,2))
+plot(lm_all)
+
+```
+
+     + The residual plot indicates that a linear regression may not be the most appropriate choice in model as the relationship between the predictors and mpg may not be linear. Furthermore, there is evidence that the assumption of constant variance is violated. As the fitted values get larger, so do the residuals. 
+
