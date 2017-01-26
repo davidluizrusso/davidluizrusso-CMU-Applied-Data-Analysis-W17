@@ -7,9 +7,15 @@ output: word_document
 
 * 3.7 #1
 
-    + Null hypothesis: The average number of units sold when TV, radio, and newspaper advertising spending are 0 is equal to 0.
-    + Null hypothesis: TV advertising spending is not associated with sales of the product
-    + Null hypothesis: Radio advertising spending is not associated with sales of the product
-    + Null hypothesis: Newspaper advertising spending is not associated with sales of the product 
+    + Intercept Null hypothesis: The average number of units sold when TV, radio, and newspaper advertising spending are 0 is equal to 0. Based on the p-value of <0.0001 we reject the null hypothesis and conclude that the average number of units sold when TV, radio, and newspaper advertising spending are 0 is different than 0.
+    + TV Null hypothesis: TV advertising spending is not associated with sales of the product. Based on the p-value of <0.0001, we reject the null hypothesis and conclude that TV advertising spending is associated with sales.
+    + Radio Null hypothesis: Radio advertising spending is not associated with sales of the product. Based on the p-value of <0.0001, we reject the null hypothesis and conclude that radio advertising spending is associated with sales.
+    + Newspaper Null hypothesis: Newspaper advertising spending is not associated with sales of the product. Based on the p-value of 0.8599, we fail to reject the null hypothesis and conclude that newspaper advertising is likely not associated with sales. 
     
-* 3.7 #2
+* 3.7 #2 KNN regression and KNN Classification differ only in the form of their predicted response. KNN Classification predicts a qualitative response, while KNN regression predicts a quantitative response. In KNN classification, the predicted classification for a given test observation is the majority vote of the K nearest classifications. In KNN regression, the predicted value for a given test observation is the mean value of the K nearest responses. 
+
+* 3.7 #3
+    + a. f
+    + b. g
+    + c. h
+    + d. i
