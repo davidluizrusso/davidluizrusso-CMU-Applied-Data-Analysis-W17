@@ -1,0 +1,38 @@
+---
+title: "Week 3 Assignment"
+author: "David Russo"
+date: "1/28/2017"
+output: word_document
+---
+
+* 3.7 #14
+
+  + a. Set up data
+```{r}
+set.seed(1)
+x1 <- runif(100)
+x2 <- 0.5*x1 + rnorm(100)/10
+y <- 2 + 2*x1 + 0.3*x2 + rnorm(100)
+```
+
+The form of the linear model is $y = 2 + 2x1 + 0.3x2 + \epsilon$.
+
+The coefficients are $\beta_{0} = 2, \beta_{1} = 2, \beta_{2} = 0.3$
+
+  + b. cor() and pairs()
+```{r}
+cor(x1, x2)
+pairs(data.frame(x1 = x1, x2 = x2, y = y))
+```
+
+The correlation between x1 and x2 is 0.8351.
+
+  + c. lm() and summary()
+```{r}
+lm1 <- lm(y ~ x1 + x2)
+summary(lm1)
+```
+
+
+
+* 3.7 #15
