@@ -116,7 +116,7 @@ plot(lm_all)
 
 ```
 
-     + The residual plot indicates that a linear regression may not be the most appropriate choice in model as the relationship between the predictors and mpg may not be linear. Furthermore, there is evidence that the assumption of constant variance is violated. As the fitted values get larger, so do the residuals. 
+     + The residual plot indicates that a linear regression may not be the most appropriate choice in model as the relationship between the predictors and mpg may not be linear. Furthermore, there is evidence that the assumption of constant variance is violated. As the fitted values get larger, so do the residuals. The residual plot indicates that there may be three outliers towards the higher end of the fitted values corresponding to data points 323, 326, and 327. The leverage plot indicates that points 14, 327, and 394 may have unusually high leverage. 
     
     + e. interactions
 ```{r}
@@ -124,10 +124,10 @@ plot(lm_all)
 lm_int1 <- lm(mpg ~ displacement + weight + year + origin + year*displacement, data = auto)
 summary(lm_int1)
 
-lm_int2 <- lm(mpg ~ displacement + weight + year + origin + year*weight, data = auto)
+lm_int2 <- lm(mpg ~ displacement + weight + year + origin + year:weight, data = auto)
 summary(lm_int2)
 
-lm_int3 <- lm(mpg ~ displacement + weight + year + origin + year*origin, data = auto)
+lm_int3 <- lm(mpg ~ displacement + weight + year*origin, data = auto)
 summary(lm_int3)
 
 ```
