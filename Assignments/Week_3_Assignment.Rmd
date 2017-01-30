@@ -2,10 +2,16 @@
 title: "Week 3 Assignment"
 author: "David Russo"
 date: "1/28/2017"
-output: word_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 * 3.7 #14
+```{r set_up_libraries, echo = FALSE, include = FALSE}
+library(tidyverse)
+library(MASS)
+```
 
   + a. Set up data
 ```{r}
@@ -29,10 +35,118 @@ The correlation between x1 and x2 is 0.8351.
 
   + c. lm() and summary()
 ```{r}
-lm1 <- lm(y ~ x1 + x2)
-summary(lm1)
+lm_all <- lm(y ~ x1 + x2)
+summary(lm_all)
 ```
+
+$\hat{\beta_{0}} = 2.1305, \hat{\beta_{1}} = 1.4396, \hat{\beta_{2}} = 1.0097$
+
+$\hat{\beta_{0}}$ of 2.1305 is fairly close to the true $\beta_{0}$ of 2; $\hat{\beta_{1}}$ of 1.4396 is about 70% the size of $\beta_{1}$ = 2; $\hat{\beta_{2}}$ of 1.0097 is about 3 times the size of $\beta_{2}$ = 0.3
+
+We can reject the null hypothesis $H_{0}: \beta_{1} = 0$ because the p-value = 0.0487 < 0.05. We cannot reject the null hypothesis $H_{0}: \beta_{2} = 0$ because the p-value = 0.3754 > 0.05. 
+
+  + d. lm() y onto x1
+```{r}
+lm_x1 <- lm(y ~ x1)
+summary(lm_x1)
+```
+We can reject the null hypothesis $H_{0}: \beta_{1} = 0$ because the p-value = $2.66*10^{-6}$ < 0.05. The $R^{2}$ for this fit is `r round(summary(lm_x1)$r.squared, 4)`, which is very close to $R^{2}$ of the regression of $y$ onto $x1$ and $x2$, which is `r round(summary(lm_all)$r.squared, 4)`. This would indicate that $x2$ does not add much information to the model given the presence of $x1$. 
+
+  + e. lm() onto x2
+```{r}
+lm_x2 <- lm(y ~ x2)
+summary(lm_x2)
+```
+We can reject the null hypothesis $H_{0}: \beta_{1} = 0$ because the p-value = `r summary(lm_x2)$coefficients[2, 4]` < 0.05. The $R^{2}$ for this fit is `r round(summary(lm_x2)$r.squared, 4)`, which is a few percentage points away from the $R^{2}$ of the regression of $y$ onto $x1$ and $x2$, which is `r round(summary(lm_all)$r.squared, 4)`. This would indicate that $x2$ does not add as much information to the model as $x1$. The variable $x2$ is significant in the absence of $x1$, but is not significant in the presence of $x1$. 
+
+   + f. Comparison of (c)-(e)
+   
+In part (c), we fit a regression model of $y$ onto $x1$ and $x2$. In this model, $x1$ was a significant predictor of $y$, but $x2$ was not. In part (d), we fit a model of $y$ onto $x1$ only and $x1$ was significant. In part (e), we fit a model of $y$ onto $x2$ and $x2$ was significant. These answers contradict eachother on the surface, but upon further investigation it means that $x2$ is not significant in the presence of $x1$, but it is significant in the absence of $x1$. This would indicate that $x1$ and $x2$ are correlated (i.e., they suffer from collinearity). 
+
+    + g. Additional observation
+```{r}
+x1 <- c(x1, 0.1)
+x2 <- c(x2, 0.8)
+y <- c(y, 6)
+
+lm_all_ao <- lm(y ~ x1 + x2)
+summary(lm_all_ao)
+par(mfrow = c(2,2))
+plot(lm_all_ao)
+
+lm_x1_ao <- lm(y ~ x1)
+summary(lm_x1_ao)
+par(mfrow = c(2,2))
+plot(lm_x1_ao)
+
+lm_x2_ao <- lm(y ~ x2)
+summary(lm_x2_ao)
+par(mfrow = c(2,2))
+plot(lm_x2_ao)
+```
+
+With the new observation, $x2$ is significant and $x1$ is not significant in the model featuring both predictors. In the individual models, both $x1$ and $x2$ are significant. The only model in which this new observation is an outlier is the model in which $y$ is regressed upon $x1$ only. This can be seen by looking at the plot of the residuals vs. the fitted values. In the plot for the model featuring $x1$ only, the new observation is about 3 units away from the mean of 0. In the other models, the new observation is not labeled as being far from the mean. 
+In the model featuring both predictors, the new data point is a high leverage point. In the model using only $x1$ the new point is not a high leverage point. In the model using only $x2$ the new point is a high leverage point. The assessments of leverage can be made from the residuals vs. leverage plots. 
+
 
 
 
 * 3.7 #15
+
+  + a. lm() for each predictor
+```{r}
+data(Boston)
+models <- lapply(paste("crim", names(Boston)[-1], sep = "~"), formula)
+res_models <- lapply(models, function(x) {summary(lm(formula = x, data = Boston))})
+names(res_models) <- paste("crim", names(Boston)[-1], sep = "~")
+res_models
+```
+
+With the exception of the variable $chas$, each predictor is a significant predictor of crime rate. This can be seen in the chart below which plots p-value for the predictor as a function of model. 
+
+```{r, echo = FALSE}
+p_vals <- sapply(res_models, function(x) x$coefficients[2,4])
+p_vals <- data.frame(model = names(p_vals), `p-vals` = p_vals)
+
+plot <- p_vals %>%
+          ggplot(aes(x = model, y = p.vals)) + 
+            geom_point() + 
+              geom_hline(yintercept = 0.05, col = "blue") + 
+                theme(axis.text.x = element_text(angle = 45, hjust = 1))
+plot
+```
+
+
+  + b. multiple regression
+```{r}
+lm_all <- lm(crim ~ ., data = Boston)
+summary(lm_all)
+```
+
+In the multiple regression model, we see that we can reject the null hypothesis that at least one of the predictors is significant as evidenced by the p-value of $2e-16$. We also see that $zn$, $dis$, $rad$, $black$, and $medv$ are significant predictors of crime at the $\alpha = 0.05$ level. In examining the diagnostic plots, we see that the assumption of constant variance is violated as the residuals form a funnel shape. The residuals get bigger as the fitted values get bigger. The q-q plot indicates a serious deviation from normality. 
+
+```{r}
+par(mfrow = c(2,2))
+plot(lm_all)
+```
+
+  + c. comparisons
+```{r}
+univariate <- as.numeric(sapply(res_models, function(x) x$coefficients[2,1]))
+multivariate <- as.numeric(lm_all$coefficients[-1])
+names <- names(lm_all$coefficients)[-1]
+  
+cos <- data.frame(
+  names = names,
+  univariate = univariate,
+  multivariate = multivariate
+)
+
+plot2 <- cos %>%
+          ggplot(aes(x = univariate, y = multivariate)) + 
+            geom_point(aes(col = names)) + 
+              scale_fill_distiller()
+plot2
+```
+
+As can be seen from the plot, the univariate regression estimates are similar to the multivariate regression estimates with the exception of one point. The point with the univariate estimate of 30 and a multivariate estimate of -10 corresponds to the predictor of $nox$. 
