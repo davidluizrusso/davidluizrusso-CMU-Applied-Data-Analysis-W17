@@ -150,3 +150,39 @@ plot2
 ```
 
 As can be seen from the plot, the univariate regression estimates are similar to the multivariate regression estimates with the exception of one point. The point with the univariate estimate of 30 and a multivariate estimate of -10 corresponds to the predictor of $nox$. 
+
+  + d. non-linear associations
+```{r}
+covs <- paste(names(Boston)[-c(1, 4)], 
+              paste0("poly(", names(Boston)[-c(1, 4)], ", 3)"),
+              sep = "+")
+
+models_poly3 <- lapply(paste("crim", covs, sep = "~"), formula)
+
+res_models_poly3 <- lapply(models_poly3, function(x) {summary(lm(formula = x, data = Boston))})
+
+names(res_models_poly3) <- paste("crim", covs, sep = "~")
+
+res_models_poly3
+```
+
+As can be seen in the plots below, most models had significant squared and cubed terms. The variable $black$ did not have a significant quadratic or cubic term. The variables $lstat$, $rad$, $rm$, $tax$, and $zn$ did not have significant cubic terms. 
+
+```{r, echo = FALSE}
+p_vals_poly <- lapply(res_models_poly3, function(x) x$coefficients[-1, 4])
+p_vals_poly <- data.frame(do.call(rbind, p_vals_poly))
+p_vals_poly <- cbind(names(Boston)[-c(1, 4)], p_vals_poly)
+names(p_vals_poly) <- c("term", "linear", "quadratic", "cubic")
+row.names(p_vals_poly) <- NULL
+
+p_vals_poly_long <- p_vals_poly %>% tidyr::gather("power", "p_value", -1)
+
+
+
+pplot <- p_vals_poly_long %>%
+          ggplot(aes(x = term, y = p_value, color = power)) + 
+            geom_point() + 
+              geom_hline(yintercept = 0.05, col = "black") +
+                theme(axis.text.x = element_text(angle = 45, hjust = 1))
+pplot
+```
