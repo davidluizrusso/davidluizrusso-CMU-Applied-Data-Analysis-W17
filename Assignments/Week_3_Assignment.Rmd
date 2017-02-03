@@ -102,7 +102,7 @@ names(res_models) <- paste("crim", names(Boston)[-1], sep = "~")
 res_models
 ```
 
-With the exception of the variable $chas$, each predictor is a significant predictor of crime rate. This can be seen in the chart below which plots p-value for the predictor as a function of model. 
+With the exception of the variable $chas$, it appears that each predictor is a significant predictor of crime rate. This can be seen in the chart below which plots p-value for the predictor as a function of model. However, upon examining the plots of the residuals vs. fitted values, we see that the assumption of constant variance is violated with each of the variables. While the p-values indicate significance with most variables, the results should be taken with caution because of this violation. 
 
 ```{r, echo = FALSE}
 p_vals <- sapply(res_models, function(x) x$coefficients[2,4])
@@ -116,6 +116,30 @@ plot <- p_vals %>%
 plot
 ```
 
+```{r, echo = FALSE}
+models <- lapply(paste("crim", names(Boston)[-1], sep = "~"), formula)
+no_sum_models <- lapply(models, function(x) lm(formula = x, data = Boston))
+names(no_sum_models) <- paste("crim", names(Boston)[-1], sep = "~")
+
+tt <-
+  do.call(rbind, lapply(seq_along(no_sum_models), 
+                        function(x) data.frame(name = names(no_sum_models[x]),
+                                               fv = no_sum_models[[x]]$fitted.values, 
+                                               res = no_sum_models[[x]]$residuals)))
+```
+
+```{r, echo = FALSE}
+diag_plot <-
+  tt %>% 
+    ggplot(aes(x = fv, y = res)) +
+      geom_point() + 
+        facet_wrap(~ name) + 
+          xlab("fitted values") +
+            ylab("residuals")
+
+diag_plot
+```
+
 
   + b. multiple regression
 ```{r}
@@ -123,7 +147,7 @@ lm_all <- lm(crim ~ ., data = Boston)
 summary(lm_all)
 ```
 
-In the multiple regression model, we see that we can reject the null hypothesis that at least one of the predictors is significant as evidenced by the p-value of $2e-16$. We also see that $zn$, $dis$, $rad$, $black$, and $medv$ are significant predictors of crime at the $\alpha = 0.05$ level. In examining the diagnostic plots, we see that the assumption of constant variance is violated as the residuals form a funnel shape. The residuals get bigger as the fitted values get bigger. The q-q plot indicates a serious deviation from normality. 
+In the multiple regression model, we see that we can reject the null hypothesis that at least one of the predictors is significant as evidenced by the p-value of $2*10^{-16}$. We also see that $zn$, $dis$, $rad$, $black$, and $medv$ are significant predictors of crime at the $\alpha = 0.05$ level. In examining the diagnostic plots, we see that the assumption of constant variance is violated as the residuals form a funnel shape. The residuals get bigger as the fitted values get bigger. The q-q plot indicates a serious deviation from normality. 
 
 ```{r}
 par(mfrow = c(2,2))
