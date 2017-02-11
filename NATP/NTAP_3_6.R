@@ -6,8 +6,6 @@ library(corrplot)
 library(leaps)
 library(car)
 
-
-
 data(Boston)
 
 ### Examine structure of Boston data set
@@ -32,7 +30,21 @@ sorted <-
 
 pairs(Boston[names(Boston) %in% c("medv", "lstat", "rm")])
 
+###---------------------------------------------------------------------------
+###---------------------------------------------------------------------------
+###------- Custom Functions --------------------------------------------------
+###---------------------------------------------------------------------------
+###---------------------------------------------------------------------------
 
+performanceSummary <- function(lm_mod){
+  rs <- summary(lm_mod)$r.squared
+  ars <- summary(lm_mod)$adj.r.squared
+  mse <- summary(lm_mod)$sigma
+  
+  res <- data.frame(r_squared = rs, adj_r_squared = ars, MSE = mse)
+  
+  res
+}
 
 ###---------------------------------------------------------------------------
 ###---------------------------------------------------------------------------
@@ -68,8 +80,9 @@ summary.out$adjr2
 
 # the best compromise of R^2 and complexity is the model with 7 variables
 # crim, nox, rm, dis, ptratio, black, lstat
-lm.best_subsets <- lm(medv ~ zn + chas + nox + rm + dis + ptratio + lstat, data = trainset)
-postResample(pred = predict(lm.best_subsets, testset),  obs = testset$medv)
+lm.best_subsets <- lm(medv ~ zn + chas + nox + rm + dis + ptratio + lstat, data = testset)
+performanceSummary(lm_mod = lm.best_subsets)
+
 
 ##### LASSO variable selection
 lasso_grid <- expand.grid(fraction = seq(.05, 1, length = 20))
@@ -85,7 +98,8 @@ lasso_pred <- predict(lasso_model, testset)
 postResample(pred = lasso_pred,  obs = testset$medv)
 
 # crim, rm, dis, tax, ptratio, black, lstat
-lm.lasso <- lm(medv ~ crim + rm + dis + tax + ptratio + black + lstat, data = trainset)
+lm.lasso <- lm(medv ~ crim + rm + dis + tax + ptratio + black + lstat, data = testset)
+performanceSummary(lm.lasso)
 postResample(pred = predict(lm.lasso, testset),  obs = testset$medv)
 
 # fine tune lm.best_subsets
@@ -103,14 +117,72 @@ xyPlots <- boston_long %>%
 
 # dis, lstat, nox all appear to have signs of non-linearity 
 lm.best_subsets_poly <- lm(medv ~ zn + chas + poly(nox, 3) + rm + poly(dis, 3) + ptratio + poly(lstat, 3), data = trainset)
+performanceSummary(lm.best_subsets_poly)
 
-#lstat has a significant quadratic term
+# lstat has a significant quadratic term
 lm.best_subsets_poly <- lm(medv ~ zn + chas + nox + rm + dis + ptratio + poly(lstat, 2), data = trainset)
-postResample(pred = predict(lm.best_subsets_poly, testset),  obs = testset$medv)
+lm.best_subsets_poly_test <- lm(medv ~ zn + chas + nox + rm + dis + ptratio + poly(lstat, 2), data = testset)
+performanceSummary(lm.best_subsets_poly_test)
 
 
+
+
+## multicollinearity considerations
+preds <- data.frame(zn = Boston$zn,
+                    chas = Boston$chas,
+                    nox = Boston$nox,
+                    rm = Boston$rm,
+                    dis = Boston$dis,
+                    ptratio = Boston$ptratio,
+                    lstat_poly1 = poly(Boston$lstat, 2)[, 1],
+                    lstat_poly2 = poly(Boston$lstat, 2)[, 2])
                 
+corrplot::corrplot(cor(preds),
+                   order = "hclust",
+                   type = "lower")
 
+# dis and nox have high correlation, as do rm and lstat_poly1
+lm.best_subsets_poly_int1 <- lm(medv ~ zn + chas + nox + rm + dis + ptratio + poly(lstat, 2) + dis*nox, data = testset)
+performanceSummary(lm.best_subsets_poly_int1)
+
+lm.best_subsets_poly_int2 <- lm(medv ~ zn + chas + nox + rm + dis + ptratio + rm*poly(lstat, 2), data = trainset)
+lm.best_subsets_poly_int2_test <- lm(medv ~ zn + chas + nox + rm + dis + ptratio + rm*poly(lstat, 2), data = testset)
+
+performanceSummary(lm.best_subsets_poly_int2_test)
+
+
+###---------------------------------------------------------------------------
+###---------------------------------------------------------------------------
+###------- Final Model -------------------------------------------------------
+###---------------------------------------------------------------------------
+###---------------------------------------------------------------------------
+
+lm.final_model <- lm(medv ~ chas + nox + rm + dis + ptratio + poly(lstat, 2), data = Boston)
+
+lm.final_model <- lm(sqrt(medv) ~ chas + nox + rm + log(dis) + ptratio + poly(lstat, 2), data = Boston)
+performanceSummary(lm.final_model)
+
+
+plot(lm.final_model$fitted.values, sqrt(Boston$medv), 
+     xlab = "Fitted Values",
+     ylab = "Square Root of Median House Price ($1000s)",
+     main = "Final Model Fit")
+
+
+plot(Boston$lstat, sqrt(Boston$medv),
+     xlab = "lstat",
+     ylab = "Square Root of Median House Price ($1000s)",
+     main = "Potential Non-linearity of relationship between \n ltstat and median house value")
+
+
+
+
+par(mfrow = c(2,2))
+plot(lm.final_model)
+
+
+
+summary(lm.final_model)
 
 ###---------------------------------------------------------------------------
 ###---------------------------------------------------------------------------
@@ -141,5 +213,28 @@ lm.best_subsets_poly <- lm(medv ~ zn + chas + poly(nox, 3) + rm + poly(dis, 3) +
 #lstat has a significant quadratic term
 lm.best_subsets_poly <- lm(medv ~ zn + chas + nox + rm + dis + ptratio + poly(lstat, 2), data = trainset)
 postResample(pred = predict(lm.best_subsets_poly, testset),  obs = testset$medv)
+
+
+## Transformations
+medv <- data.frame(status = "non-transformed", var = "medv", value = Boston$medv)
+medv_sqrt <- data.frame(status = "square root", var = "medv", value = sqrt(Boston$medv))
+dis <- data.frame(status = "non-transformed", var = "dis", value = Boston$dis)
+dis_log <- data.frame(status = "log", var = "dis", value = log(Boston$dis))
+
+
+resp <- do.call(rbind, list(medv, medv_sqrt, dis, dis_log))
+
+medv_plot <- 
+  resp %>%
+    ggplot(aes(x = value)) + 
+      geom_histogram() + 
+        facet_wrap(~var + status, scales = "free")
+
+
+
+
+
+
+
 
 
