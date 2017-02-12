@@ -179,6 +179,7 @@ plot(Boston$lstat, sqrt(Boston$medv),
 
 par(mfrow = c(2,2))
 plot(lm.final_model)
+dev.off()
 
 
 
@@ -230,6 +231,45 @@ medv_plot <-
       geom_histogram() + 
         facet_wrap(~var + status, scales = "free")
 
+###---------------------------------------------------------------------------
+###---------------------------------------------------------------------------
+###------- Actionable Insights -----------------------------------------------
+###---------------------------------------------------------------------------
+###---------------------------------------------------------------------------
+
+chas_plot <- 
+  Boston %>%
+    dplyr::arrange(medv) %>%
+      dplyr::mutate(index = 1:nrow(Boston), chas = as.character(chas)) %>%
+        ggplot(aes(x = index, y = medv)) + 
+          geom_point(aes(color = chas)) +
+            xlab("") + 
+              ylab("Median House Value") + 
+                theme(axis.title.x=element_blank(),
+                      axis.text.x=element_blank(),
+                      axis.ticks.x=element_blank())
+
+
+rooms_plot <- 
+  Boston %>%
+  dplyr::arrange(medv) %>%
+  dplyr::mutate(index = 1:nrow(Boston)) %>%
+  ggplot(aes(x = index, y = medv)) + 
+  geom_point(aes(color = rm)) +
+  xlab("") + 
+  ylab("Median House Value") + 
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+
+###---------------------------------------------------------------------------
+###---------------------------------------------------------------------------
+###------- Supplemental Information ------------------------------------------
+###---------------------------------------------------------------------------
+###---------------------------------------------------------------------------
+
+broom::tidy(lm.final_model)
 
 
 
