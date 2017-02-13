@@ -68,6 +68,36 @@ regsubsets.out <-
              method = "exhaustive")
 regsubsets.out
 
+best_subsets_mods <- lapply(1:13, function(x) names(coef(regsubsets.out, x))[-1])
+
+best_subsets_mods_formulas <- lapply(best_subsets_mods,
+                                     function(x) paste(x, collapse = "+"))
+
+best_subsets_mods_full_formulas <- lapply(best_subsets_mods_formulas,
+                                          function(x) lm(formula = paste0("medv ~ ", x), data = trainset))
+
+# RMSE
+rmse <- sapply(best_subsets_mods_full_formulas, function(x) sqrt(sum(predict(x, newdata = testset) - testset$medv)^2/nrow(testset)))
+
+plotRmse <- data.frame(complexity = 1:13, measure = "Test Set: RMSE", value = rmse)
+
+
+# Adjusted R-squared
+ars <- sapply(best_subsets_mods_full_formulas, function(x) summary(x)$adj.r.squared)
+
+plotArs <- data.frame(complexity = 1:13, measure = "Test Set: Adjusted R Squared", value = ars)
+
+# all metrics
+plotMetrics <- rbind(plotRmse, plotArs)
+
+metPlot <- 
+  plotMetrics %>%
+    ggplot(aes(x = complexity, y = value)) + 
+      geom_line() + 
+        facet_wrap(~measure, scale = "free") + 
+          xlab("Number of Parameters")
+
+
 summary.out <- summary(regsubsets.out)
 as.data.frame(summary.out$outmat)
 plot(regsubsets.out, scale = "adjr2", main = "Adjusted R^2")
