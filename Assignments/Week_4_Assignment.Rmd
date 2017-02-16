@@ -11,6 +11,38 @@ library(tidyverse)
 library(MASS)
 ```
 
-  + a. In this scenario, approximately 10% of the observations will be used to make a prediction.
+  + a. 
+In this scenario, 10% of the observations will be used to make a prediction.
   
-  + b. 
+  + b.
+In this scenario, 1% of the observations will be used to make a prediction.
+  
+  + c.
+In this scenario, $10^{-100}$ of the observations will be used to make a prediction. 
+
+  + d.
+Consider a scenario where there are n = 1000 observations. If p = 1, we will utilize 100 observations per prediction on average. If p = 2, we will use 10 observations per prediction on average. If p = 100, we will use approximately 0 observations per prediction on average. In order to use even 10 observations on average, we would need n = $10^21$ observations when p = 100. The plot below demonstrates the percentage of observations used as a function of p (note that the y-axis is on a log scale).
+
+```{r, echo = FALSE}
+
+dat <- data.frame(
+  p = seq(from = 1, to = 10, by = 1),
+  proportion = sapply(c(1:10), function(x) 10^-x)
+)
+
+dat %>% 
+  ggplot(aes(x = p, y = proportion)) +
+    geom_line() + 
+      scale_y_log10() + 
+        scale_x_continuous(breaks = 1:10) + 
+          ylab("Proportion of Observations Used \n Log Scale")
+
+```
+
+
+
+  + e.
+When p = 1, the hypercube (in this case, a 1D line) will have length 0.10. 
+When p = 2, the hypercube (in this case, a 2D square) will have length $\sqrt{0.10}$ = 0.316. 
+When p = 100, the hypercube (in this case, a 100D cube) will have length $0.10^{1/100}$ = 0.977.
+In general, for a given p, the hypercube will require a length of $0.10^{1/p}$. For an arbitrary percentage of the training observations $t$ for a hypercube of dimension $p$, the hypercube will need to be of length $t^{1/p}$. 
