@@ -1,0 +1,16 @@
+---
+title: "Week 4 Assignment"
+author: "David Russo"
+date: "2/15/2017"
+output: word_document
+---
+
+* 4.7 #4
+```{r set_up_libraries, echo = FALSE, include = FALSE}
+library(tidyverse)
+library(MASS)
+```
+
+  + a. In this scenario, approximately 10% of the observations will be used to make a prediction.
+  
+  + b. 
