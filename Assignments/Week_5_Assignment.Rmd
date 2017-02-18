@@ -2,7 +2,9 @@
 title: "Week 4 Assignment"
 author: "David Russo"
 date: "2/15/2017"
-output: word_document
+output:
+  pdf_document: default
+  word_document: default
 ---
 
 * 4.7 #4
