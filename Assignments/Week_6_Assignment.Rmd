@@ -1,0 +1,16 @@
+---
+title: "Week  6 Assignment"
+author: "David Russo"
+date: "2/18/2017"
+output: html_document
+---
+
+* 4.7 #10
+```{r set_up, echo = FALSE, include = FALSE}
+library(tidyverse)
+library(MASS)
+library(ISLR)
+
+```
+
+
