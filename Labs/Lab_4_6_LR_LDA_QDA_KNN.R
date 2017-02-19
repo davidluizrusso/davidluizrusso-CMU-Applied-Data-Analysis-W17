@@ -1,6 +1,8 @@
 ## 4.6.1 The Stock Market Data
 library(tidyverse)
 library(ISLR)
+library(MASS)
+library(class)
 names(Smarket)
 dim(Smarket)
 summary(Smarket)
@@ -61,3 +63,37 @@ predict(glm.fit,
           Lag2 = c(1.1, -0.8)
         ),
         type = "response")
+
+
+## 4.6.3 Linear Discriminant Analysis
+lda.fit <- lda(Direction ~ Lag1 + Lag2,
+               data = Smarket,
+               subset = train)
+lda.fit
+plot(lda.fit)
+lda.pred <- predict(lda.fit, Smarket_test)
+names(lda.pred)
+lda.class <- lda.pred$class
+table(lda.class, Direction_test)
+mean(lda.class == Direction_test)
+sum(lda.pred$posterior[, 1] > 0.50) 
+sum(lda.pred$posterior[, 1] < 0.50) 
+lda.pred$posterior[1:20]
+lda.class[1:20]
+sum(lda.pred$posterior[, 1] > 0.9)
+
+## 4.6.4 Quadratic Discriminant Analysis
+qda.fit <- qda(Direction ~ Lag1 + Lag2,
+               data = Smarket,
+               subset = train)
+qda.fit
+
+qda.class <- predict(qda.fit, Smarket_test)$class
+table(qda.class, Direction_test)
+mean(qda.class == Direction_test)
+
+## 4.6.5 K-Nearest Neighbors
+train.X <- cbind(Smarket$Lag1, Smarket$Lag2)[train, ]
+test.X <- cbind(Smarket$Lag1, Smarket$Lag2)[!train, ]
+train.Direction <- Smarket$Direction[train]
+
