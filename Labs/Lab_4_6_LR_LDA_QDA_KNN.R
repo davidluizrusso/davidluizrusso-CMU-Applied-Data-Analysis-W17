@@ -97,3 +97,52 @@ train.X <- cbind(Smarket$Lag1, Smarket$Lag2)[train, ]
 test.X <- cbind(Smarket$Lag1, Smarket$Lag2)[!train, ]
 train.Direction <- Smarket$Direction[train]
 
+set.seed(1)
+knn.pred <- knn(train.X, test.X, train.Direction, k = 1)
+table(knn.pred, Direction_test)
+mean(knn.pred == Direction_test)
+
+knn.pred <- knn(train.X, test.X, train.Direction, k = 3)
+table(knn.pred, Direction_test)
+mean(knn.pred == Direction_test)
+
+## 4.6.6 Application to Caravan Insurance Data
+dim(Caravan)
+summary(Caravan$Purchase)
+348/5822
+
+standardized.X <- scale(Caravan[, -86])
+var(Caravan[, 1])
+var(Caravan[, 2])
+var(standardized.X[, 1])
+var(standardized.X[, 2])
+
+test <- 1:1000
+train.X <- standardized.X[-test, ]
+test.X <- standardized.X[test, ]
+train.Y <- Caravan$Purchase[-test]
+test.Y <- Caravan$Purchase[test]
+set.seed(1)
+knn.pred <- knn(train.X, test.X, train.Y, k = 1)
+mean(test.Y != knn.pred)
+mean(test.Y != "No")
+table(knn.pred, test.Y)
+
+knn.pred <- knn(train.X, test.X, train.Y, k = 3)
+table(knn.pred, test.Y)
+
+knn.pred <- knn(train.X, test.X, train.Y, k = 5)
+table(knn.pred, test.Y)
+
+glm.fit <- glm(Purchase ~ .,
+               data = Caravan,
+               family = binomial,
+               subset = -test)
+glm.probs <- predict(glm.fit, Caravan[test, ], type = "response")
+glm.pred <- rep("No", length(test))
+glm.pred[glm.probs > 0.5] <- "Yes"
+table(glm.pred, test.Y)
+
+glm.pred <- rep("No", length(test))
+glm.pred[glm.probs > 0.25] <- "Yes"
+table(glm.pred, test.Y)
