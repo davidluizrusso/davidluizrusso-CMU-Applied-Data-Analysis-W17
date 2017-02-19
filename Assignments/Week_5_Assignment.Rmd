@@ -23,7 +23,7 @@ In this scenario, 1% of the observations will be used to make a prediction.
 In this scenario, $10^{-100}$ of the observations will be used to make a prediction. 
 
   + d.
-Consider a scenario where there are n = 1000 observations. If p = 1, we will utilize 100 observations per prediction on average. If p = 2, we will use 10 observations per prediction on average. If p = 100, we will use approximately 0 observations per prediction on average. In order to use even 10 observations on average, we would need n = $10^21$ observations when p = 100. The plot below demonstrates the percentage of observations used as a function of p (note that the y-axis is on a log scale).
+Consider a scenario where there are n = 1000 observations. If p = 1, we will utilize 100 observations per prediction on average. If p = 2, we will use 10 observations per prediction on average. If p = 100, we will use approximately 0 observations per prediction on average. In order to use even 10 observations on average, we would need n = $10^{21}$ observations when p = 100. The plot below demonstrates the percentage of observations used as a function of p (note that the y-axis is on a log scale).
 
 ```{r, echo = FALSE}
 
