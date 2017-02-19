@@ -2,14 +2,31 @@
 title: "Week  6 Assignment"
 author: "David Russo"
 date: "2/18/2017"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 * 4.7 #10
 ```{r set_up, echo = FALSE, include = FALSE}
+# load libraries
 library(tidyverse)
 library(MASS)
 library(ISLR)
+library(class)
+# load data
+data(Weekly)
+```
+
+  + a.
+```{r numeric_summaries, echo = FALSE}
+count_years <- 
+Weekly %>%
+  group_by(Year) %>%
+    summarise(Count = n())
+knitr::kable(count_years)
+
+
 
 ```
 
