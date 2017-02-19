@@ -19,15 +19,31 @@ data(Weekly)
 ```
 
   + a.
-```{r numeric_summaries, echo = FALSE}
-count_years <- 
+```{r a_numeric_summaries, echo = FALSE}
+count_results <- 
 Weekly %>%
-  group_by(Year) %>%
-    summarise(Count = n())
-knitr::kable(count_years)
+  group_by(Direction) %>%
+    summarise(Count = n(),
+              Percent = paste0(round(Count/nrow(Weekly), 2)*100, "%"))
+knitr::kable(count_results)
+
+mean_covariates <- 
+Weekly %>%
+  group_by(Direction) %>%
+    summarise(`Mean Lag1` = round(mean(Lag1), 4),
+              `Mean Lag2` = round(mean(Lag2), 4),
+              `Mean Lag3` = round(mean(Lag3), 4),
+              `Mean Lag4` = round(mean(Lag4), 4), 
+              `Mean Lag5` = round(mean(Lag5), 4),
+              `Mean Volume` = round(mean(Volume), 4),
+              `Mean Today` = round(mean(Today), 4))
+knitr::kable(mean_covariates)
 
 
-
+knitr::kable(cor(Weekly[!names(Weekly) %in% "Direction"]))
 ```
 
+```{r a_graphical_summaries, echo = FALSE}
+
+```
 
