@@ -43,7 +43,53 @@ knitr::kable(mean_covariates)
 knitr::kable(cor(Weekly[!names(Weekly) %in% "Direction"]))
 ```
 
+We see that for the market data, about $56$% of the weeks had positive market performance while $44$% of the weeks had negative market performance. The value of $today$ does not appear to be highly correlated with any of the $lag$ or $volume$ covariates. 
+
 ```{r a_graphical_summaries, echo = FALSE}
+Weekly_lag_long <-
+  Weekly %>%
+    dplyr::select(Lag1, Lag2, Lag3, Lag4, Lag5, Direction) %>%
+      gather("Lag", "Value", 1:5) %>%
+        ggplot(aes(x = Direction, y = Value)) + 
+          geom_boxplot()
+Weekly_lag_long
+
+volPlot <- 
+  Weekly %>%
+    ggplot(aes(x = Year, y = Volume)) + 
+      geom_point()
+volPlot
+
+mean_year <-
+Weekly %>%
+  group_by(Year) %>%
+    summarise(`mean weekly return` = round(mean(Today), 4)) %>%
+      ggplot(aes(x = Year, y = `mean weekly return`)) +
+        geom_line()
+mean_year
+```
+
+From the side-by-side boxplots, we see that markets finished up and down with relatively equal magnitudes. Furthermore, we can see that the number of trades has increased exponentially since 1990. Lastly, we can see that the average weekly return has varied from year to year, with several more down years between the years 2000 and 2010 vs 1990 and 2000. 
+
+  + b. 
+```{r b_full_log_reg}
+
+glm.b <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume,
+             data = Weekly,
+             family = binomial)
+
+summary(glm.b)
+
+```
+
+Only the variable Lag2 appears to be a significant predictor of direction. 
+
+  + c.
+```{r c_confusion_matrix}
+
+contrasts(Weekly$Direction)
+glm.b.preds <- ifelse(predict(glm.b, type = "response") < 0.5, "Down", "Up")
+table(glm.b.preds, Weekly$Direction)
 
 ```
 
