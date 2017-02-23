@@ -85,11 +85,84 @@ summary(glm.b)
 Only the variable Lag2 appears to be a significant predictor of direction. 
 
   + c.
+  
+As can be seen from the confusion matrix below, the model tends to predict that the market will go up, as `r round((430+557)/(430+557+54+48), 2)*100`% of the predicted values were for the market going up. When the model predicts that the market will go up, it is correct `r round(557/(430+557), 2)*100`% of the time. When the model predicts that the market will go down, it is right `r round(54/(54+48), 2)*100`% of the time. Overall, the model has a `r round((54+557)/(54+48+430+557), 2)*100`% accuracy rate.The model is overly optimisitc, as the stock market only went up around 56% of the time. 
 ```{r c_confusion_matrix}
 
+# determine what is being modeled
 contrasts(Weekly$Direction)
+# get predictions using 0.5 as the probability threshold 
 glm.b.preds <- ifelse(predict(glm.b, type = "response") < 0.5, "Down", "Up")
+# get confusion matrix of predicted directions and actual directions
 table(glm.b.preds, Weekly$Direction)
 
 ```
 
+   + d.
+
+As can be seen from the confusion matrix below, the overall accuracy on the test data is `r round((9+56)/(9+56+5+34), 2)*100`%.
+```{r d_validation_log_reg}
+# Create training and testing sets
+Weekly_train <- dplyr::filter(Weekly, Year %in% 1990:2008)
+Weekly_test <- dplyr::filter(Weekly, Year %in% 2009:2010)
+
+# fit model
+glm.d <- glm(Direction ~ Lag2,
+             data = Weekly_train,
+             family = binomial)
+# get predicted responses
+glm.d.preds <- ifelse(predict(glm.d, newdata = Weekly_test, type = "response") < 0.50,
+                       "Down",
+                       "Up")
+ 
+# create confusion matrix
+table(glm.d.preds, Weekly_test$Direction)
+```
+  + e.
+
+As can be seen from the confusion matrix below, the predictions for linear discriminant analysis mirror those of logistic regression. The overall accuracy rate is again `r round((9+56)/(9+5+34+56), 2)*100`%.
+```{r e_validation_lda}
+# fit lda model
+lda.e <- lda(Direction ~ Lag2,
+             data = Weekly_train)
+
+# extract predictions
+lda.pred <- predict(lda.e, newdata = Weekly_test)$class
+
+# create confusion matrix
+table(lda.pred, Weekly_test$Direction)
+```
+
+  + f.
+
+As can be seen from the confusion matrix below, the predictions for quadratic discriminant analysis are always "Up". The overall accuracy is `r round(61/(61+43), 2)*100`%. It is possible that a cut-off other than 0.50 will yield improved accuracy. 
+```{r f_validation_qda}
+qda.e <- qda(Direction ~ Lag2,
+             data = Weekly_train)
+
+# extract predictions
+qda.pred <- predict(qda.e, newdata = Weekly_test)$class
+
+# create confusion matrix
+table(qda.pred, Weekly_test$Direction)
+```
+
+  + g.
+  
+As can be seen from the confusion matrix below, KNN with K = 1 has an overall accuracy of `r round((21+31)/(21+31+30+22), 2)*100`%.  
+```{r g_validation_knn1}
+# set random number seed for tie breaking
+set.seed(1)
+
+# create training and testing sets
+train.X <- dplyr::select(Weekly_train, Lag2)
+test.X <- dplyr::select(Weekly_test, Lag2)
+train.Y <- Weekly_train %>% dplyr::select(Direction) %>% collapse %>% .[[1]]
+
+# make predictions
+knn.pred <- class::knn(train.X, test.X, train.Y, k = 1)
+
+# create confusion matrix
+table(knn.pred, Weekly_test$Direction)
+
+```
