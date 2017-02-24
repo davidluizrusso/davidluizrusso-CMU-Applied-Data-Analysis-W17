@@ -72,7 +72,7 @@ mean_year
 From the side-by-side boxplots, we see that markets finished up and down with relatively equal magnitudes. Furthermore, we can see that the number of trades has increased exponentially since 1990. Lastly, we can see that the average weekly return has varied from year to year, with several more down years between the years 2000 and 2010 vs 1990 and 2000. 
 
   + b. 
-```{r b_full_log_reg}
+```{r b_full_log_reg, echo = FALSE}
 
 glm.b <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume,
              data = Weekly,
@@ -87,7 +87,7 @@ Only the variable Lag2 appears to be a significant predictor of direction.
   + c.
   
 As can be seen from the confusion matrix below, the model tends to predict that the market will go up, as `r round((430+557)/(430+557+54+48), 2)*100`% of the predicted values were for the market going up. When the model predicts that the market will go up, it is correct `r round(557/(430+557), 2)*100`% of the time. When the model predicts that the market will go down, it is right `r round(54/(54+48), 2)*100`% of the time. Overall, the model has a `r round((54+557)/(54+48+430+557), 2)*100`% accuracy rate.The model is overly optimisitc, as the stock market only went up around 56% of the time. 
-```{r c_confusion_matrix}
+```{r c_confusion_matrix, echo = FALSE}
 
 # determine what is being modeled
 contrasts(Weekly$Direction)
@@ -101,7 +101,7 @@ table(glm.b.preds, Weekly$Direction)
    + d.
 
 As can be seen from the confusion matrix below, the overall accuracy on the test data is `r round((9+56)/(9+56+5+34), 2)*100`%.
-```{r d_validation_log_reg}
+```{r d_validation_log_reg, echo = FALSE}
 # Create training and testing sets
 Weekly_train <- dplyr::filter(Weekly, Year %in% 1990:2008)
 Weekly_test <- dplyr::filter(Weekly, Year %in% 2009:2010)
@@ -121,7 +121,7 @@ table(glm.d.preds, Weekly_test$Direction)
   + e.
 
 As can be seen from the confusion matrix below, the predictions for linear discriminant analysis mirror those of logistic regression. The overall accuracy rate is again `r round((9+56)/(9+5+34+56), 2)*100`%.
-```{r e_validation_lda}
+```{r e_validation_lda, echo = FALSE}
 # fit lda model
 lda.e <- lda(Direction ~ Lag2,
              data = Weekly_train)
@@ -136,7 +136,7 @@ table(lda.pred, Weekly_test$Direction)
   + f.
 
 As can be seen from the confusion matrix below, the predictions for quadratic discriminant analysis are always "Up". The overall accuracy is `r round(61/(61+43), 2)*100`%. It is possible that a cut-off other than 0.50 will yield improved accuracy. 
-```{r f_validation_qda}
+```{r f_validation_qda, echo = FALSE}
 qda.e <- qda(Direction ~ Lag2,
              data = Weekly_train)
 
@@ -150,7 +150,7 @@ table(qda.pred, Weekly_test$Direction)
   + g.
   
 As can be seen from the confusion matrix below, KNN with K = 1 has an overall accuracy of `r round((21+31)/(21+31+30+22), 2)*100`%.  
-```{r g_validation_knn1}
+```{r g_validation_knn1, echo = FALSE}
 # set random number seed for tie breaking
 set.seed(1)
 
@@ -164,5 +164,219 @@ knn.pred <- class::knn(train.X, test.X, train.Y, k = 1)
 
 # create confusion matrix
 table(knn.pred, Weekly_test$Direction)
+```
+
+  + h.
+Of these methods, both logistic regression and LDA perform the best with respect to their test set error rates. 
+
+  + i.
+As can be seen from the correlation matrix plot below, there aren't many candidates for interactions. Volume and Lag2 have a correlation of -0.086 while Lag2 and Lag3 have a correlation of -0.076. Judging by the histograms, the only variable that could be improved by a transformation is Volume. 
+```{r i_investigation_interactions_transformations, echo = FALSE}
+preds_cor <- 
+Weekly %>%
+  dplyr::select(Lag1, Lag2, Lag3, Lag4, Lag5, Volume, Today) %>%
+    as.matrix() %>%
+      cor()
+
+# display correlation matrix
+preds_cor
+
+# plot correlation matrix
+corrplot::corrplot(preds_cor,
+                   order = "hclust",
+                   type = "lower")
+
+Weekly_long <- 
+Weekly %>%
+  dplyr::select(Lag1, Lag2, Lag3, Lag4, Lag5, Volume, Today) %>%
+    tidyr::gather(key = variable, value = value) %>%
+      ggplot(aes(x = value)) +
+        geom_histogram() + 
+          facet_wrap(~variable, scale = "free")
+Weekly_long
+
+Volume_hist <-
+Weekly %>%
+  dplyr::select(Volume) %>%
+    ggplot(aes(x = log(Volume))) + 
+      geom_histogram()
+
+Volume_hist
+```
+
+To determine which variables to investigate, we will fit a logistic regression on all variables with an interaction between Volume and Lag2, an interaction between Lag2 and Lag3, and a log-transformed Volume variable. As can be seen from the results below, Lag1 is significant at the $\alpha=0.05$ level. Lag2 and log(Volume) are not significant at the $\alpha-0.05$ level, but are borderline significant. Not surprisingly, the interactions are not significant as there was not much evidence of correlation amongst the variables. 
+```{r i_log_reg_var_selector, echo = FALSE}
+glm.all <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + 
+                           log(Volume) + Lag2*log(Volume) + Lag2*Lag3,
+             data = Weekly_train,
+             family = binomial)
+
+summary(glm.all)
+```
+Each of logistic regression, LDA, and QDA will be tested with the following models: 
+1) $Direction ~ Lag1$
+2) $Direction ~ Lag2$
+3) $Direction ~ Lag1 + Lag2$
+4) $Direction ~ Lag1 + Lag2 + log(Volume)$
+5) $Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*Log(Volume)$
+6) $Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*Lag3$
+7) $Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*Log(Volume) + Lag2*Lag3$
+
+The training set containing years 1990 through 2008 will be used to train each model, and the test set containing the years 2009 and 2010 will be used to evaluate the models. In total, 21 models will be trained and tested: 7 variable specifications and 3 model types. Similarly, 11 models were fit for KNN with K ranging from 1 to 100. The final results of the 32 models are sorted by accuracy below. The best performing models are logistic regression and LDA, using Lag2, and a combination of Lag1, Lag2, log(Volume), and the Lag2*Lag3 interaction. The top 4 models all had an accuracy of $62.50$%. Their confusion matrices can be found below. 
+
+```{r i_model_fitting, echo = FALSE}
+fit_glm <- function(formula, train_data, test_data){
+  glm_candidate <- glm(as.formula(formula),
+                       data = train_data,
+                       family = binomial)
+  
+  glm.preds <- ifelse(predict(glm_candidate, newdata = test_data, type = "response") < 0.5, 
+                      "Down",
+                      "Up")
+  acc <- round(mean(glm.preds == test_data[, "Direction"]), 4)
+  
+  acc
+}
+
+fit_lda <- function(formula, train_data, test_data){
+  lda_candidate <- lda(as.formula(formula),
+                       data = train_data)
+  
+  lda.preds <- predict(lda_candidate, newdata = test_data)$class
+  acc <- round(mean(lda.preds == test_data[, "Direction"]), 4)
+  
+  acc
+}
+
+fit_qda <- function(formula, train_data, test_data){
+  qda_candidate <- qda(as.formula(formula),
+                       data = train_data)
+  
+  qda.preds <- predict(qda_candidate, newdata = test_data)$class
+  acc <- round(mean(qda.preds == test_data[, "Direction"]), 4)
+  
+  acc
+}
+
+formulas <- c(
+  "Direction ~ Lag1",
+  "Direction ~ Lag2",
+  "Direction ~ Lag1 + Lag2",
+  "Direction ~ Lag1 + Lag2 + log(Volume)",
+  "Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*log(Volume)",
+  "Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*Lag3",
+  "Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*log(Volume) + Lag2*Lag3"
+)
+
+log_regs <- sapply(formulas, function(x) fit_glm(x,
+                                                 train_data = Weekly_train,
+                                                 test_data = Weekly_test),
+                   USE.NAMES = TRUE)
+
+ldas <- sapply(formulas, function(x) fit_lda(x,
+                                             train_data = Weekly_train,
+                                             test_data = Weekly_test),
+                USE.NAMES = TRUE)
+
+qdas <- sapply(formulas, function(x) fit_qda(x,
+                                            train_data = Weekly_train,
+                                            test_data = Weekly_test),
+               USE.NAMES = TRUE)
+
+set.seed(1)
+k_range <- c(1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+knns <- sapply(k_range,
+        function(x) mean(class::knn(train.X, test.X, train.Y, k = x) == Weekly_test$Direction))
+
+results <- data.frame(
+                      method = rep(c('logistic regression', "lda", "qda"), each = 7),
+                      model = c(names(log_regs), names(ldas), names(qdas)),
+                      accuracy = c(log_regs, ldas, qdas)
+                      )
+
+knn_results <- data.frame(
+                      method = rep("KNN", length(k_range)),
+                      model = paste0("k = ", k_range),
+                      accuracy = round(knns, 4)
+                          )
+
+final_results <- 
+rbind(results, knn_results) %>%
+  dplyr::arrange(desc(accuracy))
+
+
+
+knitr::kable(final_results)
+```
+
+```{r i_winning_confusion_matrices_calc, echo = FALSE}
+
+lr.1 <- glm(Direction ~ Lag2,
+             data = Weekly_train,
+             family = binomial)
+lr.1.preds <- ifelse(predict(lr.1, newdata = Weekly_test, type = "response") < 0.50,
+                     "Down",
+                     "Up")
+
+  
+lr.2 <- glm(Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*Lag3,
+             data = Weekly_train,
+             family = binomial)
+lr.2.preds <- ifelse(predict(lr.2, newdata = Weekly_test, type = "response") < 0.50,
+                     "Down",
+                     "Up")
+
+
+lda.1 <- lda(Direction ~ Lag2,
+             data = Weekly_train)
+lda.1.preds <- predict(lda.1, newdata = Weekly_test)$class
+
+  
+lda.2 <- lda(Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*Lag3,
+             data = Weekly_train)
+lda.2.preds <- predict(lda.2, newdata = Weekly_test)$class
 
 ```
+
+```{r i_winning_confusion_matrix_show}
+# Logistic Regression Direction ~ Lag2
+table(lr.1.preds, Weekly_test$Direction)
+
+# Logistic Regression Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*Lag3
+table(lr.2.preds, Weekly_test$Direction)
+
+# LDA Direction ~ Lag2
+table(lda.1.preds, Weekly_test$Direction)
+
+# LDA Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*Lag3
+table(lda.2.preds, Weekly_test$Direction)
+```
+* 4.7 #13
+The median of the crime variable is `r median(Boston$crim)`. We begin by creating a variable that equals 1 if crime is above the median and 0 if crime is below the median. We also create training and testing data sets. 
+```{r load_data_create_above_median_crime_indicator}
+# load Boston data
+data(Boston)
+
+# Create Above Median Crime rate variable called amc
+Boston$amc <- ifelse(Boston$crim >= median(Boston$crim), 1, 0)
+
+# Remove the crime variable to avoid non convergence of glm
+Boston$crim <- NULL
+
+# Create training and testing data by reserving 75% of the Boston data for training
+# and the remaining 25% for testing
+train_index <- sample(c(TRUE, FALSE), nrow(Boston), prob = c(0.75, 0.25), replace = TRUE)
+Boston_train <- Boston[train_index, ]
+Boston_test <- Boston[!train_index, ]
+```
+
+To perform the initial variable selection, we will perform a logistic regression on the training data to identify candidate variables. As can be seen from the summary below, the following variables are significant at the $\alpha=0.10$ level: $zn$, $nox$, $age$, $dis$, $rad$, $tax$, $ptratio$, $black$, and $medv$. 
+
+```{r identify_candidate_variables}
+glm.candidates <- glm(amc ~ ., 
+                      data = Boston_train,
+                      family = binomial)
+
+summary(glm.candidates)
+```
+
