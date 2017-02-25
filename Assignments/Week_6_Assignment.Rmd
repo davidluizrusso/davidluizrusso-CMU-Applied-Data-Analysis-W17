@@ -214,13 +214,21 @@ glm.all <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 +
 summary(glm.all)
 ```
 Each of logistic regression, LDA, and QDA will be tested with the following models: 
+
 1) $Direction ~ Lag1$
+
 2) $Direction ~ Lag2$
+
 3) $Direction ~ Lag1 + Lag2$
+
 4) $Direction ~ Lag1 + Lag2 + log(Volume)$
+
 5) $Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*Log(Volume)$
+
 6) $Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*Lag3$
+
 7) $Direction ~ Lag1 + Lag2 + log(Volume) + Lag2*Log(Volume) + Lag2*Lag3$
+
 
 The training set containing years 1990 through 2008 will be used to train each model, and the test set containing the years 2009 and 2010 will be used to evaluate the models. In total, 21 models will be trained and tested: 7 variable specifications and 3 model types. Similarly, 11 models were fit for KNN with K ranging from 1 to 100. The final results of the 32 models are sorted by accuracy below. The best performing models are logistic regression and LDA, using Lag2, and a combination of Lag1, Lag2, log(Volume), and the Lag2*Lag3 interaction. The top 4 models all had an accuracy of $62.50$%. Their confusion matrices can be found below. 
 
@@ -352,31 +360,149 @@ table(lda.1.preds, Weekly_test$Direction)
 table(lda.2.preds, Weekly_test$Direction)
 ```
 * 4.7 #13
-The median of the crime variable is `r median(Boston$crim)`. We begin by creating a variable that equals 1 if crime is above the median and 0 if crime is below the median. We also create training and testing data sets. 
+The median of the crime variable is `r median(Boston$crim)`. We begin by creating a variable that equals "above" if crime is above the median and "below" if crime is below the median. We also create training and testing data sets. 
 ```{r load_data_create_above_median_crime_indicator}
 # load Boston data
 data(Boston)
 
 # Create Above Median Crime rate variable called amc
-Boston$amc <- ifelse(Boston$crim >= median(Boston$crim), 1, 0)
+Boston$amc <- as.factor(ifelse(Boston$crim >= median(Boston$crim), "above", "below"))
 
 # Remove the crime variable to avoid non convergence of glm
 Boston$crim <- NULL
 
 # Create training and testing data by reserving 75% of the Boston data for training
 # and the remaining 25% for testing
+set.seed(1)
 train_index <- sample(c(TRUE, FALSE), nrow(Boston), prob = c(0.75, 0.25), replace = TRUE)
 Boston_train <- Boston[train_index, ]
 Boston_test <- Boston[!train_index, ]
 ```
 
-To perform the initial variable selection, we will perform a logistic regression on the training data to identify candidate variables. As can be seen from the summary below, the following variables are significant at the $\alpha=0.10$ level: $zn$, $nox$, $age$, $dis$, $rad$, $tax$, $ptratio$, $black$, and $medv$. 
+To perform the initial variable selection, we will perform a logistic regression on the training data to identify candidate variables.The following variables are significant at the $\alpha=0.02$ level: $nox$, $dis$, $rad$, $ptratio$, and $medv$. 
 
-```{r identify_candidate_variables}
+```{r identify_candidate_variables, echo = FALSE, include = FALSE}
 glm.candidates <- glm(amc ~ ., 
                       data = Boston_train,
                       family = binomial)
 
 summary(glm.candidates)
 ```
+
+We now examine potential interactions between $nox$, $dis$, $rad$, $ptratio$, and $medv$, as well as possible transformations. Judging by the correlation plot, nox and dis as well as rad and nox have the highest correlations. 
+
+```{r interactions, echo = FALSE}
+preds_cor <- 
+Boston %>%
+  dplyr::select(nox, dis, rad, ptratio, medv) %>%
+    as.matrix() %>%
+      cor()
+
+# plot correlation matrix
+corrplot::corrplot(preds_cor,
+                   order = "hclust",
+                   type = "lower")
+```
+
+For the logistic and LDA models, we will fit the following models: 
+
+1) $amc ~ nox + dis + rad + ptratio + medv$
+
+2) $amc ~ nox + dis + rad + ptratio + medv + nox*dis$
+
+3) $amc ~ nox + dis + rad + ptratio + medv + nox*rad$
+
+4) $amc ~ nox + dis + rad + ptratio + medv + nox*dis + nox*rad$
+
+KNN was fit with $nox$, $dis$, $rad$, $ptratio$, and $medv$. 
+
+As can be seen from the table below, KNN with k = 5 had the highest accuracy on the test data. 
+
+```{r fit_models, echo = FALSE}
+fit_glm2 <- function(form, train_data, test_data){
+  
+  candidate_glm <- glm(as.formula(form), 
+                       data = train_data,
+                       family = binomial)
+  
+  probs <- predict(candidate_glm, newdata = test_data, type = "response")
+  preds <- ifelse(probs < 0.5, "above", "below")
+  
+  acc <- round(mean(preds == test_data[, "amc"]), 4)
+  
+  acc
+  
+}
+
+fit_lda2 <- function(form, train_data, test_data){
+  
+  candidate_lda <- lda(as.formula(form),
+                       data = train_data)
+  
+  preds <- predict(candidate_lda, newdata = train_data)$class
+  
+  acc = round(mean(preds == train_data[, "amc"]), 4)
+  
+  acc
+  
+}
+
+formulas2 <- c(
+  "amc ~ nox + dis + rad + ptratio + medv",
+  "amc ~ nox + dis + rad + ptratio + medv + nox*dis",
+  "amc ~ nox + dis + rad + ptratio + medv + nox*rad",
+  "amc ~ nox + dis + rad + ptratio + medv + nox*dis + nox*rad"
+)
+
+log_regs2 <- sapply(formulas2, function(x) fit_glm2(x,
+                                                 train_data = Boston_train,
+                                                 test_data = Boston_test),
+                   USE.NAMES = TRUE)
+
+ldas2 <- sapply(formulas2, function(x) fit_lda2(x,
+                                             train_data = Boston_train,
+                                             test_data = Boston_test),
+                USE.NAMES = TRUE)
+
+# create training and testing sets for KNN
+btrain <- cbind(Boston_train$nox,
+                Boston_train$dis,
+                Boston_train$rad,
+                Boston_train$ptratio,
+                Boston_train$medv)
+
+btest <- cbind(Boston_test$nox,
+                Boston_test$dis,
+                Boston_test$rad,
+                Boston_test$ptratio,
+                Boston_test$medv)
+
+bresp <- as.factor(Boston_train$amc)
+
+set.seed(1)
+k_range <- seq(from = 1, to = 130, by = 2)
+knns <- sapply(k_range,
+        function(x) mean(class::knn(btrain, btest, bresp, k = x) ==  as.factor(Boston_test$amc)))
+
+results <- data.frame(
+                      method = rep(c('logistic regression', "lda"), each = 4),
+                      model = c(names(log_regs2), names(ldas2)),
+                      accuracy = c(log_regs2, ldas2)
+                      )
+
+knn_results <- data.frame(
+                      method = rep("KNN", length(k_range)),
+                      model = paste0("k = ", k_range),
+                      accuracy = round(knns, 4)
+                          )
+
+final_results <- 
+rbind(results, knn_results) %>%
+  dplyr::arrange(desc(accuracy)) %>%
+    head(20)
+
+knitr::kable(final_results)
+
+```
+
 
