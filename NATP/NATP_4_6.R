@@ -26,9 +26,11 @@ preProc_test <- preProcess(Smarket_test)
 Smarket_test <- predict(preProc_test, Smarket_test)
 
 # get KNN data sets
+set.seed(1) # for tie-breakers
 Smarket_train_x <- Smarket_train[, 1:6]
 Smarket_test_x <- Smarket_test[, 1:6]
-Smarket_train_y <- Smarket_test[, "Direction"]
+Smarket_train_y <- Smarket_train[, "Direction"]
+Smarket_test_y <- Smarket_test[, "Direction"]
 
 #----------------------------------- Exploratory data analysis
 
@@ -72,19 +74,7 @@ knn_models <- expand.grid(c(TRUE, FALSE),
                           c(TRUE, FALSE)
                           )
 
-knn_models <- knn_models[-1, ]
-
-# get KNN data sets
-Smarket_train_x <- Smarket_train[, 1:6]
-Smarket_test_x <- Smarket_test[, 1:6]
-Smarket_train_y <- Smarket_train[, "Direction"]
-
-
-knn_preds <- 
-lapply(1:nrow(knn_models), function(x) knn(data.frame(Smarket_train_x[, as.logical(knn_models[x, ])]),
-                                           data.frame(Smarket_test_x[, as.logical(knn_models[x, ])]),
-                                           Smarket_train_y,
-                                           k = 1))
+knn_models <- knn_models[-64, ]
 
 #----------------------------------- Write model fitting functions for LR, LDA, and QDA
 
@@ -167,7 +157,37 @@ fit_qda <- function(formula, train_data, test_data, response_var){
   
 }
 
+knn_fitter <- function(trainX, testX, trainY, testY, K){
+  
+  knn_preds <- lapply(1:nrow(knn_models),
+                      function(x) knn(data.frame(trainX[, as.logical(knn_models[x, ])]),
+                                      data.frame(testX[, as.logical(knn_models[x, ])]),
+                                      trainY,
+                                      k = K)
+  )
+  
+  knn_acc <- round(sapply(seq_along(knn_preds), function(x) mean(knn_preds[[x]] == testY)), 4)
+  
+  knn_true_pos <- round(sapply(seq_along(knn_preds),
+                               function(x) sum(knn_preds[[x]] == "Up" & testY == "Up")/
+                                 sum(testY == "Up")), 4)
+  
+  knn_true_neg <- round(sapply(seq_along(knn_preds),
+                               function(x) sum(knn_preds[[x]] == "Down" & testY == "Down")/
+                                 sum(testY == "Down")), 4)
+  
+  knn_names <-  sapply(1:nrow(knn_models),
+                       function(x) paste(names(trainX)[as.logical(knn_models[x, ])], collapse = ", ")
+  )
+  
+  res <- data.frame(model = paste("KNN: k = ", K),
+                    variables = knn_names,
+                    accuracy = knn_acc,
+                    `true positive rate` = knn_true_pos,
+                    `true negative rate` = knn_true_neg)
+}
 
+#----------------------------------- Fit models and store in sorted data frame
 
 glms <- do.call(rbind,
                 lapply(seq_along(t(all_models)), function(x) fit_glm(formula = all_models$model[x],
@@ -196,8 +216,18 @@ qdas <- do.call(rbind,
                 )
 )
 
+k_grid <- seq(from = 1, to = 103, by = 3)
+
+knns <- 
+  do.call(rbind,
+          lapply(k_grid, function(x) knn_fitter(trainX = Smarket_train_x,
+                                                testX = Smarket_test_x,
+                                                trainY = Smarket_train_y,
+                                                testY = Smarket_test_y,
+                                                K = x)))
+
 all_fit_models <-
-  do.call(rbind, list(glms, ldas, qdas)) %>%
+  do.call(rbind, list(glms, ldas, qdas, knns)) %>%
   dplyr::arrange(desc(accuracy), desc(true.positive.rate), desc(true.negative.rate))
 
 
