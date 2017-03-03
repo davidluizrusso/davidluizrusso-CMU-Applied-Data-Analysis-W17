@@ -56,7 +56,16 @@ glm_all <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume +
                data = Smarket_train,
                family = binomial)
 
-broom::tidy(glm_all) %>% dplyr::filter(p.value <= 0.10)
+results <- 
+broom::tidy(glm_all) %>% 
+  dplyr::arrange(desc(p.value))
+
+results %>%
+  ggplot(aes(reorder(term, p.value), p.value)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  xlab("Predictor") + 
+  ylab("P-Value")
 
 # try all main effects and Lag1:Lag5 interaction
 
@@ -107,19 +116,19 @@ fit_glm <- function(formula, train_data, test_data, response_var, threshold){
                       "Down",
                       "Up")
   
-  acc <- round(mean(glm.preds == test_data[, response_var]), 4)
+  acc <- round(mean(glm.preds == as.character(test_data[, response_var])), 4)
   
-  true_pos <- round(sum(glm.preds == "Up" & test_data[, response_var] == "Up")/
-                    sum(test_data[, response_var] == "Up"), 4)
+  pos_acc <- round(sum(glm.preds == "Up" & test_data[, response_var] == "Up")/
+                    sum(glm.preds == "Up"), 4)
   
-  true_neg <- round(sum(glm.preds == "Down" & test_data[, response_var] == "Down")/
-                      sum(test_data[, response_var] == "Down"), 4)
+  neg_acc <- round(sum(glm.preds == "Down" & test_data[, response_var] == "Down")/
+                      sum(glm.preds == "Down"), 4)
   
   res <- data.frame(model = paste("logistic regression: threshold = ", threshold),
                     variables = formula,
                     accuracy = acc,
-                    `true positive rate` = true_pos,
-                    `true negative rate` = true_neg)
+                    `positive accuracy rate` = pos_acc,
+                    `negative accuracy rate` = neg_acc)
   
   res
   
@@ -137,19 +146,19 @@ fit_lda <- function(formula, train_data, test_data, response_var, threshold){
   
   
   
-  acc <- round(mean(lda.preds == test_data[, response_var]), 4)
+  acc <- round(mean(lda.preds == as.character(test_data[, response_var])), 4)
   
-  true_pos <- round(sum(lda.preds == "Up" & test_data[, response_var] == "Up")/
-                      sum(test_data[, response_var] == "Up"), 4)
+  pos_acc <- round(sum(lda.preds == "Up" & test_data[, response_var] == "Up")/
+                      sum(lda.preds == "Up"), 4)
   
-  true_neg <- round(sum(lda.preds == "Down" & test_data[, response_var] == "Down")/
-                      sum(test_data[, response_var] == "Down"), 4)
+  neg_acc <- round(sum(lda.preds == "Down" & test_data[, response_var] == "Down")/
+                      sum(lda.preds == "Down"), 4)
   
   res <- data.frame(model = paste0("lda: threshold = ", threshold),
                     variables = formula,
                     accuracy = acc,
-                    `true positive rate` = true_pos,
-                    `true negative rate` = true_neg)
+                    `positive accuracy rate` = pos_acc,
+                    `negative accuracy rate` = neg_acc)
   
   res
   
@@ -164,19 +173,19 @@ fit_qda <- function(formula, train_data, test_data, response_var, threshold){
                       "Down",
                       "Up")
   
-  acc <- round(mean(qda.preds == test_data[, response_var]), 4)
+  acc <- round(mean(qda.preds == as.character(test_data[, response_var])), 4)
   
-  true_pos <- round(sum(qda.preds == "Up" & test_data[, response_var] == "Up")/
-                      sum(test_data[, response_var] == "Up"), 4)
+  pos_acc <- round(sum(qda.preds == "Up" & test_data[, response_var] == "Up")/
+                      sum(qda.preds == "Up"), 4)
   
-  true_neg <- round(sum(qda.preds == "Down" & test_data[, response_var] == "Down")/
-                      sum(test_data[, response_var] == "Down"), 4)
+  neg_acc <- round(sum(qda.preds == "Down" & test_data[, response_var] == "Down")/
+                      sum(qda.preds == "Down"), 4)
   
   res <- data.frame(model = paste0("qda: threshold = ", threshold),
                     variables = formula,
                     accuracy = acc,
-                    `true positive rate` = true_pos,
-                    `true negative rate` = true_neg)
+                    `positive accuracy rate` = pos_acc,
+                    `negative accuracy rate` = neg_acc)
   
   res
   
@@ -193,13 +202,13 @@ knn_fitter <- function(trainX, testX, trainY, testY, K){
   
   knn_acc <- round(sapply(seq_along(knn_preds), function(x) mean(knn_preds[[x]] == testY)), 4)
   
-  knn_true_pos <- round(sapply(seq_along(knn_preds),
+  knn_pos_acc <- round(sapply(seq_along(knn_preds),
                                function(x) sum(knn_preds[[x]] == "Up" & testY == "Up")/
-                                 sum(testY == "Up")), 4)
+                                 sum(knn_preds[[x]] == "Up")), 4)
   
-  knn_true_neg <- round(sapply(seq_along(knn_preds),
+  knn_neg_acc <- round(sapply(seq_along(knn_preds),
                                function(x) sum(knn_preds[[x]] == "Down" & testY == "Down")/
-                                 sum(testY == "Down")), 4)
+                                 sum(knn_preds[[x]] == "Down")), 4)
   
   knn_names <-  sapply(1:nrow(knn_models),
                        function(x) paste(names(trainX)[as.logical(knn_models[x, ])], collapse = ", ")
@@ -208,8 +217,8 @@ knn_fitter <- function(trainX, testX, trainY, testY, K){
   res <- data.frame(model = paste("KNN: k = ", K),
                     variables = knn_names,
                     accuracy = knn_acc,
-                    `true positive rate` = knn_true_pos,
-                    `true negative rate` = knn_true_neg)
+                    `positive accuracy rate` = knn_pos_acc,
+                    `negative accuracy rate` = knn_neg_acc)
 }
 
 #----------------------------------- Fit models and store in sorted data frame
@@ -254,10 +263,37 @@ knns <-
 
 all_fit_models <-
   do.call(rbind, list(glms, ldas, qdas, knns)) %>%
-  dplyr::arrange(desc(accuracy), desc(true.positive.rate), desc(true.negative.rate))
+  dplyr::arrange(desc(accuracy), desc(positive.accuracy.rate), desc(negative.accuracy.rate))
+
+top_each_model <-
+  do.call(rbind,list(
+    dplyr::filter(all_fit_models, grepl("logistic", model, ignore.case = TRUE)) %>% head(1),
+    dplyr::filter(all_fit_models, grepl("LDA", model, ignore.case = TRUE)) %>% head(1),
+    dplyr::filter(all_fit_models, grepl("QDA", model, ignore.case = TRUE)) %>% head(1),
+    dplyr::filter(all_fit_models, grepl("KNN", model, ignore.case = TRUE)) %>% head(1)
+  ))
+
+#----------------------------------- Final model
+set.seed(1)
+knn_preds_82 <- class::knn(data.frame(Smarket_train[, c("Lag5", "Volume")]),
+                        data.frame(Smarket_test[, c("Lag5", "Volume")]),
+                        Smarket_train$Direction,
+                        k = 82)
+
+knn_plot_data <- data.frame(
+  Lag5 = Smarket_test$Lag5,
+  Volume = Smarket_test$Volume,
+  Actual_Direction = Smarket_test$Direction,
+  Predicted_Direction = knn_preds_82)
+
+knn_plot_data %>%
+  ggplot(aes(x = Lag5, y = Volume)) +
+  geom_point(aes(shape = Actual_Direction, color = Predicted_Direction)) +
+  scale_shape_manual(values=c(25, 24))+
+  scale_color_manual(values=c("Red", "Green"))
 
 
-          
+
 
   
 
