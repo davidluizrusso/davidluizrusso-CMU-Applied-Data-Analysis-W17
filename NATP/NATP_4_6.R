@@ -47,6 +47,19 @@ Smarket_train %>%
   geom_histogram() +
   facet_wrap(~Variable)
 
+#----------------------------------- Fit model with all second order interactions
+glm_all <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume +
+                           Lag1*Lag2 + Lag1*Lag3 + Lag1*Lag4 + Lag1*Lag5 +
+                           Lag1*Volume + Lag2*Lag3 + Lag2*Lag4 + Lag2*Lag5 +
+                           Lag2*Volume + Lag3*Lag4 + Lag3*Lag5 + Lag3*Volume +
+                           Lag4*Lag5 + Lag4*Volume + Lag5*Volume,
+               data = Smarket_train,
+               family = binomial)
+
+broom::tidy(glm_all) %>% dplyr::filter(p.value <= 0.10)
+
+# try all main effects and Lag1:Lag5 interaction
+
 #----------------------------------- List all models
 
 model_paster <- function(cans, p){
@@ -56,6 +69,12 @@ model_paster <- function(cans, p){
   mods <- as.data.frame(paste0("Direction ~ ", mods))
   names(mods) <- "model"
   mods$model <- as.character(mods$model)
+  
+  if(p > 1){
+  expand <- ifelse(grepl("Lag1", mods$model) & grepl("Lag5", mods$model), TRUE, FALSE)
+  extras <- data.frame(model = paste(mods[expand, ], "Lag1*Lag5", sep = " + "))
+  mods <- rbind(mods, extras)} 
+  
   mods
   
 }
@@ -78,13 +97,13 @@ knn_models <- knn_models[-64, ]
 
 #----------------------------------- Write model fitting functions for LR, LDA, and QDA
 
-fit_glm <- function(formula, train_data, test_data, response_var){
+fit_glm <- function(formula, train_data, test_data, response_var, threshold){
   
   glm_candidate <- glm(as.formula(formula),
                        data = train_data,
                        family = binomial)
   
-  glm.preds <- ifelse(predict(glm_candidate, newdata = test_data, type = "response") < 0.5, 
+  glm.preds <- ifelse(predict(glm_candidate, newdata = test_data, type = "response") < threshold, 
                       "Down",
                       "Up")
   
@@ -96,7 +115,7 @@ fit_glm <- function(formula, train_data, test_data, response_var){
   true_neg <- round(sum(glm.preds == "Down" & test_data[, response_var] == "Down")/
                       sum(test_data[, response_var] == "Down"), 4)
   
-  res <- data.frame(model = "logistic regression",
+  res <- data.frame(model = paste("logistic regression: threshold = ", threshold),
                     variables = formula,
                     accuracy = acc,
                     `true positive rate` = true_pos,
@@ -107,12 +126,16 @@ fit_glm <- function(formula, train_data, test_data, response_var){
 }
 
 
-fit_lda <- function(formula, train_data, test_data, response_var){
+fit_lda <- function(formula, train_data, test_data, response_var, threshold){
   
   lda_candidate <- lda(as.formula(formula),
                        data = train_data)
   
-  lda.preds <- predict(lda_candidate, newdata = test_data)$class
+  lda.preds <- ifelse(predict(lda_candidate, newdata = test_data)$posterior[, "Down"] >= threshold,
+                      "Down",
+                      "Up")
+  
+  
   
   acc <- round(mean(lda.preds == test_data[, response_var]), 4)
   
@@ -122,7 +145,7 @@ fit_lda <- function(formula, train_data, test_data, response_var){
   true_neg <- round(sum(lda.preds == "Down" & test_data[, response_var] == "Down")/
                       sum(test_data[, response_var] == "Down"), 4)
   
-  res <- data.frame(model = "lda",
+  res <- data.frame(model = paste0("lda: threshold = ", threshold),
                     variables = formula,
                     accuracy = acc,
                     `true positive rate` = true_pos,
@@ -132,12 +155,14 @@ fit_lda <- function(formula, train_data, test_data, response_var){
   
 }
 
-fit_qda <- function(formula, train_data, test_data, response_var){
+fit_qda <- function(formula, train_data, test_data, response_var, threshold){
   
   qda_candidate <- qda(as.formula(formula),
                        data = train_data)
   
-  qda.preds <- predict(qda_candidate, newdata = test_data)$class
+  qda.preds <- ifelse(predict(qda_candidate, newdata = test_data)$posterior[, "Down"] >= threshold,
+                      "Down",
+                      "Up")
   
   acc <- round(mean(qda.preds == test_data[, response_var]), 4)
   
@@ -147,7 +172,7 @@ fit_qda <- function(formula, train_data, test_data, response_var){
   true_neg <- round(sum(qda.preds == "Down" & test_data[, response_var] == "Down")/
                       sum(test_data[, response_var] == "Down"), 4)
   
-  res <- data.frame(model = "qda",
+  res <- data.frame(model = paste0("qda: threshold = ", threshold),
                     variables = formula,
                     accuracy = acc,
                     `true positive rate` = true_pos,
@@ -188,33 +213,34 @@ knn_fitter <- function(trainX, testX, trainY, testY, K){
 }
 
 #----------------------------------- Fit models and store in sorted data frame
+threshold_grids <- seq(from = 0.45, to = 0.55, by = 0.01)
 
-glms <- do.call(rbind,
+glms <- 
+do.call(rbind, lapply(threshold_grids, function(th)
+  do.call(rbind,
                 lapply(seq_along(t(all_models)), function(x) fit_glm(formula = all_models$model[x],
                                                                      train_data = Smarket_train,
                                                                      test_data = Smarket_test,
-                                                                     response_var = "Direction"
-                                                                     )
-                       )
-                )
+                                                                     response_var = "Direction",
+                                                                     threshold = th)))))
 
-ldas <- do.call(rbind,
+ldas <- 
+do.call(rbind, lapply(threshold_grids, function(th)    
+  do.call(rbind,
                 lapply(seq_along(t(all_models)), function(x) fit_lda(formula = all_models$model[x],
                                                                      train_data = Smarket_train,
                                                                      test_data = Smarket_test,
-                                                                     response_var = "Direction"
-                )
-                )
-)
+                                                                     response_var = "Direction",
+                                                                     threshold = th)))))
 
-qdas <- do.call(rbind,
+qdas <- 
+do.call(rbind, lapply(threshold_grids, function(th)  
+  do.call(rbind,
                 lapply(seq_along(t(all_models)), function(x) fit_qda(formula = all_models$model[x],
                                                                      train_data = Smarket_train,
                                                                      test_data = Smarket_test,
-                                                                     response_var = "Direction"
-                )
-                )
-)
+                                                                     response_var = "Direction",
+                                                                     threshold = th)))))
 
 k_grid <- seq(from = 1, to = 103, by = 3)
 
