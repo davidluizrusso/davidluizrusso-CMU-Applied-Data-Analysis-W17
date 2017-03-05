@@ -280,6 +280,9 @@ knn_preds_82 <- class::knn(data.frame(Smarket_train[, c("Lag5", "Volume")]),
                         Smarket_train$Direction,
                         k = 82)
 
+knn_82_confusion_matrix <-
+  table(knn_preds_82, Smarket_test$Direction)
+
 knn_plot_data <- data.frame(
   Lag5 = Smarket_test$Lag5,
   Volume = Smarket_test$Volume,
