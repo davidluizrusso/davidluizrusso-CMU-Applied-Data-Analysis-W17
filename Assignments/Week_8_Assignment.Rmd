@@ -9,7 +9,9 @@ output: pdf_document
 library(tidyverse)
 ```
 
-* 10.7 #3
+10.7 #3
+
+  * a)
 ```{r a, echo = TRUE, include = TRUE}
 obs <- data.frame(
   X1 = c(1, 1, 0, 5, 6, 4),
@@ -21,3 +23,51 @@ obs %>%
   geom_point()
 
 ```
+
+  * b)
+```{r b, echo = TRUE, include = TRUE}
+# set random number seed for replicable results
+set.seed(2017)
+
+# assign the labels
+obs$cluster <- sample(rep(c(1, 2), each = 3), 6, replace = FALSE)
+
+# print the labels
+obs
+```
+
+  * c)
+```{r c, echo = TRUE, include = TRUE}
+centroids <-
+  obs %>%
+  dplyr::group_by(cluster) %>%
+  dplyr::summarise(centroid_X1 = round(mean(X1), 2), centroid_X2 = round(mean(X2), 2)) %>%
+  as.data.frame()
+
+centroids
+  
+```
+
+  * d)
+```{r d, echo = TRUE, include = TRUE}
+
+# create distance from cluster1 centroid
+obs$dist_from_cluster1_centroid <- round(
+  sqrt((obs$X1 - centroids$centroid_X1[centroids$cluster == 1])^2 + 
+       (obs$X2 - centroids$centroid_X2[centroids$cluster == 1])^2), 4)
+
+# create distance from cluster2 centroid
+obs$dist_from_cluster2_centroid <- round(
+  sqrt((obs$X1 - centroids$centroid_X1[centroids$cluster == 2])^2 + 
+       (obs$X2 - centroids$centroid_X2[centroids$cluster == 2])^2), 4)
+
+obs$new_cluster <-
+  ifelse(obs$dist_from_cluster1_centroid <= obs$dist_from_cluster2_centroid, 1, 2)
+
+```
+
+  * e)
+
+
+
+
