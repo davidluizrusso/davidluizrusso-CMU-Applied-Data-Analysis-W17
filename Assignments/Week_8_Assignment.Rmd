@@ -1,0 +1,23 @@
+---
+title: "Week 8 Assignment"
+author: "David Russo"
+date: "3/9/2017"
+output: pdf_document
+---
+
+```{r overhead, echo = FALSE, include = FALSE}
+library(tidyverse)
+```
+
+* 10.7 #3
+```{r a, echo = TRUE, include = TRUE}
+obs <- data.frame(
+  X1 = c(1, 1, 0, 5, 6, 4),
+  X2 = c(4, 3, 4, 1, 2, 0)
+)
+
+obs %>%
+  ggplot(aes(x = X1, y = X2)) +
+  geom_point()
+
+```
