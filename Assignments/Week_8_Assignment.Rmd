@@ -119,6 +119,25 @@ obs %>%
 10.7 #9
 
   * a)
+```{r 9a, echo = TRUE, include = TRUE}
+# load data
+data("USArrests")
+
+# perform clustering and plot
+hc_complete_no_scale <- hclust(dist(USArrests), method = "complete")
+plot(hc_complete_no_scale, main = "Complete Linkage")
+```
+
+  * b)
+```{r 9b, echo = TRUE, include = TRUE}
+# use cutree, specifying 3 clusters
+cutree(hc_complete_no_scale, k = 3)
+```
+
+  * c)
+```{r 9c, echo = TRUE, include = TRUE}
+
+```
 
 
 
