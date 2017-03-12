@@ -5,9 +5,12 @@ date: "3/9/2017"
 output: pdf_document
 ---
 
-```{r overhead, echo = FALSE, include = FALSE}
+```{r overhead, echo = TRUE, include = TRUE}
 library(tidyverse)
 library(ISLR)
+library(maps)
+library(ggmap)
+library(mapdata)
 ```
 
 10.7 #3
@@ -125,7 +128,7 @@ data("USArrests")
 
 # perform clustering and plot
 hc_complete_no_scale <- hclust(dist(USArrests), method = "complete")
-plot(hc_complete_no_scale, main = "Complete Linkage")
+plot(hc_complete_no_scale, main = "Complete Linkage \n No Scaling")
 ```
 
   * b)
@@ -136,9 +139,45 @@ cutree(hc_complete_no_scale, k = 3)
 
   * c)
 ```{r 9c, echo = TRUE, include = TRUE}
+# scale the USArrests data set
+USArrests_scaled <- scale(USArrests)
+
+# perform clustering on scaled data
+hc_complete_scaled <- hclust(dist(USArrests_scaled), method = "complete")
+plot(hc_complete_scaled, main = "Complete Linkage \n With Scaling")
+
+# use cutree, specifying 3 clusters
+cutree(hc_complete_scaled, k = 3)
 
 ```
 
+  * d)
+
+As can be seen from the results below, clustering on scaled data can create much different results than clustering on non-scaled data. The non-scaled data more evenly distributes the cluster assignments between 1, 2, and 3 while the scaled data creates far more cluster 3 labels (31) than cluster 1 or 2 labels (8 and 11 respectively). Furthermore, in examining in the scale of the variables, we see that Murder ranges from 0.80 to 17.40, Assault ranges from 45.0 to 337.0, UrbanPop ranges from 32.00 to 91.00, and Rape ranges from 7.30 to 46.00. Given the varying scales of these variables and because we are using Euclidean Distance, we expect Assault to dominate the clustering, followed by UrbanPop and Rape. Murder will have less of an effect because it is on a much smaller scale than the other variables. For example, a difference of 15 is significant for the Murder variable while it is fairly small for the Assault variable. In fact, 15 almost covers the entire range of Murder while it covers hardly any of the range for Assault. 
+
+```{r 9d, include = TRUE, echo = TRUE}
+# create data frame for comparison
+no_scale <- data.frame(not_scaled_clusters = cutree(hc_complete_no_scale, k = 3))
+with_scale <- data.frame(with_scaled_clusters = cutree(hc_complete_scaled, k = 3))
+both_clusters <- cbind(no_scale, with_scale)
+both_clusters$clusters_match <- 
+  ifelse(both_clusters$not_scaled_clusters == both_clusters$with_scaled_clusters,
+         TRUE,
+         FALSE)
+
+# determine percentage of states whose clusters match between scaled and non-scaled data
+round(mean(both_clusters$clusters_match), 4)
+
+# get counts of clusters per method
+table(both_clusters$not_scaled_clusters)
+table(both_clusters$with_scaled_clusters)
+
+# create a table comparison of the two clustering methods
+table(both_clusters$not_scaled_clusters, both_clusters$with_scaled_clusters)
+
+# create summary of USArrests data set
+summary(USArrests)
+```
 
 
 
