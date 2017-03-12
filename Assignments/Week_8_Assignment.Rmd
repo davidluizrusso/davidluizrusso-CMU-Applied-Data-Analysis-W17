@@ -7,6 +7,7 @@ output: pdf_document
 
 ```{r overhead, echo = FALSE, include = FALSE}
 library(tidyverse)
+library(ISLR)
 ```
 
 10.7 #3
@@ -114,7 +115,23 @@ obs %>%
   ggplot(aes(x = X1, y = X2, color = as.factor(new_cluster))) +
   geom_point()
 ```
-  
+
+10.7 #7
+```{r demonstration, echo = TRUE, include = TRUE}
+# load the data
+data("USArrests")
+
+# scale the data so that each variable has a mean of 0 and a variance of 1
+usa_scaled <- scale(USArrests)
+# verify that the scaled data's variables all have mean 0 and variance 1
+apply(usa_scaled, 2, function(x) round(c(mean(x), var(x)), 2))
+
+# create data frame of combinations of rows of usa_scaled data set
+# there are choose(50, 2) = 1225 ways to choose 2 observations out of 50
+combs <- t(combn(50, 2))
+head(combs)
+
+```
 
 
 
