@@ -79,7 +79,114 @@ kn.out$tot.withinss
 #10.5.2 Hierarchical Clustering
 hc.complete <- hclust(dist(x), method = "complete")
 
-#----------------------------- Lab 10.6.1
+hc.average <- hclust(dist(x), method = "average")
 
-#----------------------------- Lab 10.6.2
+hc.single <- hclust(dist(x), method = "single")
+
+par(mfrow = c(1, 3))
+plot(hc.complete,
+     main = "Complete Linkage",
+     xlab = "",
+     sub = "",
+     cex = 0.9)
+plot(hc.average,
+     main = "Average Linkage",
+     xlab = "",
+     sub = "",
+     cex = 0.9)
+plot(hc.single,
+     main = "Single Linkage",
+     xlab = "",
+     sub = "",
+     cex = 0.9)
+dev.off()
+
+lapply(list(hc.complete, hc.average, hc.single),
+       cutree,
+       2)
+
+cutree(hc.single, 4)
+
+xsc <- scale(x)
+plot(hclust(dist(x), method = "complete"),
+     main = "Hierarchical Clustering with \n Scaled Features")
+
+x <- matrix(rnorm(30*3), ncol = 3)
+dd <- as.dist(1 - cor(t(x)))
+plot(hclust(dd, method = "complete"),
+     main = "Complete Linkage with \n Correlation-Based Distance",
+     xlab = "",
+     sub = "")
+
+#----------------------------- Lab 10.6
+
+nci.labs <- NCI60$labs
+nci.data <- NCI60$data
+
+dim(nci.data)
+
+nci.labs[1:4]
+table(nci.labs)
+
+#10.6.1 PCA
+pr.out <- prcomp(nci.data, scale = TRUE)
+
+Cols <- function(vec){
+  cols <- rainbow(length(unique(vec)))
+  return(cols[as.numeric(as.factor(vec))])
+}
+
+par(mfrow = c(1, 2))
+plot(pr.out$x[, 1:2],
+     col = Cols(nci.labs),
+     pch = 19,
+     xlab = "Z1",
+     ylab = "Z2")
+plot(pr.out$x[, c(1, 3)],
+     col = Cols(nci.labs),
+     pch = 19,
+     xlab = "Z1",
+     ylab = "Z3")
+dev.off()
+
+summary(pr.out)
+plot(pr.out)
+
+pve <- 100*pr.out$sdev^2/sum(pr.out$sdev^2)
+par(mfrow = c(1, 2))
+plot(pve,
+     type = "o",
+     ylab = "PVE",
+     xlab = "Principal Component",
+     col = "blue")
+plot(cumsum(pve),
+     type = "o",
+     ylab = "Cumulative PVE",
+     xlab = "Principal Component",
+     col = "brown3")
+dev.off()
+
+#10.6.2 Clustering 
+sd.data <- scale(nci.data)
+
+par(mfrow = c(1, 3))
+data.dist <- dist(sd.data)
+plot(hclust(data.dist),
+     labels = nci.labs,
+     main = "Complete Linkage",
+     xlab = "",
+     ylab = "")
+plot(hclust(data.dist, method = "average"),
+     labels = nci.labs,
+     main = "Average Linkage",
+     xlab = "",
+     ylab = "")
+plot(hclust(data.dist, method = "single"),
+     labels = nci.labs,
+     main = "Single Linkage",
+     xlab = "",
+     ylab = "")
+dev.off()
+
+
 
