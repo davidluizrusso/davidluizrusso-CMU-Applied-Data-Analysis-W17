@@ -188,5 +188,25 @@ plot(hclust(data.dist, method = "single"),
      ylab = "")
 dev.off()
 
+hc.out <- hclust(dist(sd.data))
+hc.clusters <- cutree(hc.out, 4)
+table(hc.clusters, nci.labs)
 
+par(mfrow = c(1, 1))
+plot(hc.out, labels = nci.labs)
+abline(h = 139, col = "red")
 
+cutree(hc.out, 4)
+
+hc.out
+
+set.seed(2)
+kn.out <- kmeans(sd.data, 4, nstart = 20)
+kn.clusters <- kn.out$cluster
+table(kn.clusters, hc.clusters)
+
+hc.out <- hclust(dist(pr.out$x[, 1:5]))
+plot(hc.out,
+     labels = nci.labs,
+     main = "Hier. Clust. on First Five Score Vectors")
+table(cutree(hc.out, 4), nci.labs)
