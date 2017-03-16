@@ -106,22 +106,47 @@ plot_dat %>%
   * c)
 ```{r 10c, echo = TRUE, include = TRUE}
 km_10c <- kmeans(dat, 3, nstart = 20)
-dat_10c <- as.data.frame(dat)
-dat_10c$true_label <- true_labels
-dat_10c$km_label <- km_10c$cluster
-
-table(dat_10c$true_label, dat_10c$km_label)
+table(true_labels, km_10c$cluster)
 ```
 
   * d)
 ```{r 10d, echo = TRUE, include = TRUE}
 km_10d <- kmeans(dat, 2, nstart = 20)
-dat_10d <- as.data.frame(dat)
-dat_10d$true_label <- true_labels
-dat_10d$km_label <- km_10d$cluster
-
-table(dat_10d$true_label, dat_10d$km_label)
+table(true_labels, km_10d$cluster)
 ```
+When using K = 2 clusters, the clusters split cleanly between the three labels. Cluster 1 has group 1 and group 3 while Cluster 2 has group 2. Group 1 has a mean of 2 and Group 3 has a mean of 7, both corresponding to the positive means. Group 2 has a mean of -5, which is the only negative mean group. With two clusters, the groups are split into positive and negative groups.
+
+
+  * e)
+```{r 10e, echo = TRUE, include = TRUE}
+km_10e <- kmeans(dat, 4, nstart = 20)
+table(true_labels, km_10e$cluster)
+
+# numeric summaries of the three true labels
+summary(as.numeric(dat[1:20, ]))
+summary(as.numeric(dat[21:40, ]))
+summary(as.numeric(dat[41:60, ]))
+
+```
+When using K = 4 clusters, Group 1 is split between cluster 1 and cluster 3. Group 2 is assigned completely to cluster 2, and group 3 is assigned completely to cluster 4. As can be seen from the numeric summaries, Group 2 has only negative values while Group 3 has only positive values. Group 1 has mostly positive values but has some negative values as well. This is perhaps the reason why Group 1 is split into 2 clusters in this scenario. 
+
+  * f)
+```{r 10f, echo = TRUE, include = TRUE}
+km_10f <- kmeans(pr_10b$x[, c(1, 2)],
+                 3,
+                 nstart = 20)
+table(true_labels, km_10f$cluster)
+```
+
+When performing clustering on the principal components, the clusters again are perfectly divided into the three groups.
+
+  * g)
+```{r 10g, echo = TRUE, include = TRUE}
+km_10g <- kmeans(scale(dat), 3, nstart = 20)
+table(true_labels, km_10g$cluster)
+```
+
+When performing clustering on the scaled data, we again see perfect separation. However, the labels are different than they have been in the past. Group 1 maps to Cluster 1, Group 2 maps to Cluster 3, and Group 3 maps to Cluster 2. 
 
 
 
