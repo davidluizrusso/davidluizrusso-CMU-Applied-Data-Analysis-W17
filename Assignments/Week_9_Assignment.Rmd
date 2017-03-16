@@ -5,7 +5,7 @@ date: "3/12/2017"
 output: pdf_document
 ---
 
-```{r overhead, echo = FALSE, include = FALSE}
+```{r overhead, echo = TRUE, include = FALSE}
 library(tidyverse)
 library(ISLR)
 ```
@@ -67,3 +67,61 @@ one_minus_cor_mat
 # demonstration of proportionality 
 distance_matrix/one_minus_cor_mat
 ```
+
+10.7 #10
+
+  * a)
+```{r 10a, echo = TRUE, include = TRUE}
+# generate raw data matrix 
+set.seed(2017)
+dat <- matrix(rnorm(60*50) + rep(c(2, -5, 7), each = 20), ncol = 50)
+true_labels <- rep(c("group 1", "group 2", "group 3"), each = 20)
+
+# get means for first 20 rows, representing the first class
+mean(dat[1:20, ])
+
+# get means for the second 20 rows, representing the second class
+mean(dat[21:40, ])
+
+# get means for the final 20 rows, representing the third class
+mean(dat[41:60, ])
+```
+
+  * b)
+```{r 10b, echo = TRUE, include = TRUE}
+# perform principal components
+pr_10b <- prcomp(dat, scale = TRUE)
+
+# plot the first two principal components
+plot_dat <- as.data.frame(pr_10b$x[, c(1, 2)])
+plot_dat$label <- true_labels
+
+plot_dat %>%
+  ggplot(aes(x = PC1, y = PC2)) +
+  geom_point(aes(col = true_labels)) + 
+  xlab("Principal Component 1") + 
+  ylab("Principal Component 2")
+```
+
+  * c)
+```{r 10c, echo = TRUE, include = TRUE}
+km_10c <- kmeans(dat, 3, nstart = 20)
+dat_10c <- as.data.frame(dat)
+dat_10c$true_label <- true_labels
+dat_10c$km_label <- km_10c$cluster
+
+table(dat_10c$true_label, dat_10c$km_label)
+```
+
+  * d)
+```{r 10d, echo = TRUE, include = TRUE}
+km_10d <- kmeans(dat, 2, nstart = 20)
+dat_10d <- as.data.frame(dat)
+dat_10d$true_label <- true_labels
+dat_10d$km_label <- km_10d$cluster
+
+table(dat_10d$true_label, dat_10d$km_label)
+```
+
+
+
