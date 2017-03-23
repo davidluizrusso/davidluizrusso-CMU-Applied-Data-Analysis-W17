@@ -1,5 +1,10 @@
 #----------------------------- Lab 10.4
 library(ISLR)
+library(tidyverse)
+library(devtools)
+install_github("vqv/ggbiplot")
+install_github("kassambara/factoextra")
+
 data("USArrests")
 
 states <- row.names(USArrests)
@@ -19,7 +24,12 @@ pr.out$rotation
 
 dim(pr.out$x)
 
-biplot(pr.out, scale = 0)
+# copy function from stackexchange for ggbiplot
+# http://stackoverflow.com/questions/6578355/plotting-pca-biplot-with-ggplot2
+
+# ggbiplot::ggbiplot(pr.out)
+factoextra::fviz_pca_biplot(pr.out)
+# biplot(pr.out, scale = 0)
 
 pr.out$rotation <- -pr.out$rotation
 biplot(pr.out, scale = 0)
